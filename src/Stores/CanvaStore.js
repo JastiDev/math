@@ -55,7 +55,7 @@ const CanvaStore = types
       return self.selectedItems.length > 1 || self.anyGroup;
     },
     get hideAnyResizing() {
-      self.selectedItems.length > 1 && self.anyGroup;
+      return self.selectedItems.length > 1 && self.anyGroup;
     }
   }))
   .actions(self => {
