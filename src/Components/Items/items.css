@@ -25,6 +25,7 @@
   width: 10px;
   height: 10px;
   pointer-events: all;
+  cursor: crosshair;
 }
 
 #selector .pointers .point {
