@@ -21,6 +21,7 @@ const SelectorModel = types
       const rootPath = getRoot(self);
 
       if (rootPath.selectedItems.length === 1) {
+        console.log(rootPath.selectedItems);
         const $nodeCloned = $(rootPath.selectedItems[0].node).clone();
         const previousTransform = $nodeCloned.css('transform');
         $nodeCloned.css('transform', 'none');

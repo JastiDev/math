@@ -20,7 +20,7 @@ const Selector = observer(
           }}
           className="selector"
         >
-          {store.selectedItems.length > 1 && store.anyGroup ? null : (
+          {store.hideAnyResizing ? null : (
             <Fragment>
               <div id="nw" className="pointers pointer1 resizer">
                 <div className="point" />
@@ -34,7 +34,7 @@ const Selector = observer(
               <div id="se" className="pointers pointer4 resizer">
                 <div className="point" />
               </div>
-              {!store.showResizingMiddle ? (
+              {store.hideResizingMiddle ? null : (
                 <Fragment>
                   <div className="pointers midle-point pointer-north">
                     <div className="point" />
@@ -49,7 +49,7 @@ const Selector = observer(
                     <div className="point" />
                   </div>
                 </Fragment>
-              ) : null}
+              )}
 
               <div className="pointer-rotate pointer9" />
               <div className="rotate-line" />

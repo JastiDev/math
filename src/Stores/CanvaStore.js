@@ -51,11 +51,12 @@ const CanvaStore = types
       return self.selectedItems.length > 0 && self.allGroup;
     },
 
-    get showResizingMiddle() {
+    get hideResizingMiddle() {
       return self.selectedItems.length > 1 || self.anyGroup;
     },
-    get showAnyResizing() {},
-    get showRotate() {}
+    get hideAnyResizing() {
+      self.selectedItems.length > 1 && self.anyGroup;
+    }
   }))
   .actions(self => {
     const addItems = items => {
@@ -103,6 +104,9 @@ const CanvaStore = types
       self.cleanAll();
       self.groups.push(newGroup);
       self.selectItem(newGroup);
+      setTimeout(() => {
+        self.selector.updatePosition();
+      }, 200);
     };
 
     const destroyGroup = () => {
