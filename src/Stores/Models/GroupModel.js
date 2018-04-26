@@ -10,7 +10,7 @@ const GroupModel = types
     left: 0,
     rotate: 0,
     zIndex: 0,
-    selectedBoxes: types.array(types.reference(ItemModel)),
+    groupedItems: types.array(types.reference(ItemModel)),
     type: 'group'
   })
   .views(self => ({
@@ -18,7 +18,7 @@ const GroupModel = types
       return document.getElementById(self.id);
     },
     get isSelected() {
-      return getRoot(self).selectedBoxes.find(box => box === self);
+      return getRoot(self).selectedItems.find(item => item === self);
     }
   }))
   .actions(self => {

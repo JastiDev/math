@@ -18,10 +18,10 @@ const InternalDraggableModel = types
       // Multiple items
       if (root.selectedItems.length > 0) {
         const minY = root.selectedItems.map(item =>
-          parseInt($(item.node).position().top / delta)
+          parseFloat($(item.node).position().top / delta)
         );
         const minX = root.selectedItems.map(item => {
-          return parseInt($(item.node).position().left / delta);
+          return parseFloat($(item.node).position().left / delta);
         });
         const maxWidth = root.selectedItems.map(item => {
           if (item.rotate === 0) {
@@ -89,8 +89,8 @@ const InternalDraggableModel = types
         const item = root.selectedItems[0];
 
         const px = {
-          y: parseInt($(item.node).position().top / delta),
-          x: parseInt($(item.node).position().left / delta)
+          y: parseFloat($(item.node).position().top / delta),
+          x: parseFloat($(item.node).position().left / delta)
         };
 
         self.height = item.node.getBoundingClientRect().height / delta;
@@ -99,10 +99,10 @@ const InternalDraggableModel = types
         self.y = px.y;
       } else if (root.selectedItems.length > 1) {
         const minY = root.selectedItems.map(item =>
-          parseInt($(item.node).position().top / delta)
+          parseFloat($(item.node).position().top / delta)
         );
         const minX = root.selectedItems.map(item => {
-          return parseInt($(item.node).position().left / delta);
+          return parseFloat($(item.node).position().left / delta);
         });
         const maxWidth = root.selectedItems.map(item => {
           if (item.rotate === 0) {
@@ -157,6 +157,8 @@ const InternalDraggableModel = types
         self.width = fakeDrag.width;
         self.x = fakeDrag.left;
         self.y = fakeDrag.top;
+        self.rotate = 0;
+        self.transform = 'rotate(0deg)';
       }
     }
   }));

@@ -4,13 +4,15 @@ import $ from 'jquery';
 import { getRotationDegrees } from '../Utils/Math';
 const attachDrag = item => {
   interact(item.node).draggable({
-    snap: {
-      targets: [interact.createSnapGrid({ x: 1, y: 1 })],
-      range: Infinity,
-      relativePoints: [{ x: 0, y: 0 }]
-    },
+    // snap: {
+    //   // targets: [interact.createSnapGrid({ x: 1, y: 1 })],
+    //   range: Infinity,
+    //   relativePoints: [{ x: 0, y: 0 }]
+    // },
     onstart: event => {
       store.startDrag(item);
+      this.$selector = $('#selector');
+      this.$fake = $('#fake-drag');
     },
     onmove: event => {
       store.selectedItems.map(selectedItem => {
@@ -26,25 +28,28 @@ const attachDrag = item => {
 
         return null;
       });
+
+      const xs = (parseFloat(this.$selector[0].style.left, 10) || 0) + event.dx;
+      const ys = (parseFloat(this.$selector[0].style.top, 10) || 0) + event.dy;
+      this.$selector.css({ left: xs, top: ys });
+
+      if (store.selectedItems.length > 1) {
+        const xf =
+          (parseFloat(this.$fake[0].style.left, 10) || 0) +
+          event.dx / store.delta;
+        const yf =
+          (parseFloat(this.$fake[0].style.top, 10) || 0) +
+          event.dy / store.delta;
+
+        this.$fake.css({ left: xf, top: yf });
+      }
     },
     // call this function on every dragend event
     onend: function(event) {
-      setTimeout(() => {
-        store.endDrag();
+      store.endDrag();
+      if (store.selectedItems.length === 1) {
         store.selector.updatePosition();
-        store.internaleDraggable.updatePosition();
-        const $selector = $('#selector');
-        const anguloFinal = getRotationDegrees($selector);
-
-        store.selector.setRotation(
-          anguloFinal,
-          'rotate(' + anguloFinal + 'deg)'
-        );
-        store.internaleDraggable.setRotation(
-          anguloFinal,
-          'rotate(' + anguloFinal + 'deg)'
-        );
-      }, 50);
+      }
     }
   });
 };

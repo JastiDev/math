@@ -15,10 +15,11 @@ export default observer(
     }
     componentDidMount() {
       const { item } = this.props;
+
       if (item.idGroup === null) {
         attachTap(item);
+        attachDrag(item);
       }
-      attachDrag(item);
     }
 
     render() {

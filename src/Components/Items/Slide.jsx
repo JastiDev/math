@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import store from '../../Store';
 import fit from '../../Vendors/fit.js';
 import Item from './Item';
+import Group from './Group';
 import { InternalDraggable } from '../UI';
 import { tapContainer, destroyTapContainer } from '../../Utils/TapContainer';
 export default observer(
@@ -32,7 +33,7 @@ export default observer(
     }
 
     componentWillUnmount() {
-      window.removeEventListener('resize');
+      window.removeEventListener('resize', this);
       destroyTapContainer(this.node.current);
     }
 
@@ -41,7 +42,12 @@ export default observer(
         <div className="slide" id="slide" ref={this.node}>
           {store.showInternalDraggable ? <InternalDraggable /> : null}
           {store.items.map(item => {
-            return <Item item={item} key={item.id} />;
+            return item.idGroup === null ? (
+              <Item item={item} key={item.id} />
+            ) : null;
+          })}
+          {store.groups.map(group => {
+            return <Group key={group.id} group={group} />;
           })}
         </div>
       );

@@ -21,7 +21,7 @@ const getRotationDegrees = $obj => {
     } else {
       angle = 0;
     }
-    return parseInt(angle, 10);
+    return parseFloat(angle, 10);
   } catch (err) {
     return angle;
   }

@@ -94,7 +94,7 @@ interact('.pointer9').draggable({
 
     // Tenemos que sumarle el 90 porque nuestro selector
     // empieza en la rotación 90º
-    let angle = parseInt(parseInt(anguloDelSelector) + 90);
+    let angle = parseFloat(parseFloat(anguloDelSelector) + 90);
 
     if (angle === -89) {
       angle = -90;
@@ -120,8 +120,8 @@ interact('.pointer9').draggable({
     // Ha terminado el proceso, puedo guardar en base de datos
     store.selectedItems.map(item => {
       item.setPosition(
-        parseInt(item.node.style.left),
-        parseInt(item.node.style.top)
+        parseFloat(item.node.style.left),
+        parseFloat(item.node.style.top)
       );
 
       const angulo = getRotationDegrees($(item.node));

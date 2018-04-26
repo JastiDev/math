@@ -91,7 +91,3 @@ html {
   height: 100%;
   position: relative;
 }
-
-#fake-drag {
-  background-color: rgba(0, 0, 0, 0.1);
-}

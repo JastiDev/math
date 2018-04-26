@@ -49,7 +49,13 @@ const CanvaStore = types
     },
     get showUnGroup() {
       return self.selectedItems.length > 0 && self.allGroup;
-    }
+    },
+
+    get showResizingMiddle() {
+      return self.selectedItems.length > 1 || self.anyGroup;
+    },
+    get showAnyResizing() {},
+    get showRotate() {}
   }))
   .actions(self => {
     const addItems = items => {
@@ -59,8 +65,8 @@ const CanvaStore = types
     const endDrag = () => {
       self.selectedItems.map(selectedItem => {
         selectedItem.setPosition(
-          parseInt(selectedItem.node.style.left, 10),
-          parseInt(selectedItem.node.style.top, 10)
+          parseFloat(selectedItem.node.style.left, 10),
+          parseFloat(selectedItem.node.style.top, 10)
         );
       });
       self.isDragging = false;
@@ -78,7 +84,7 @@ const CanvaStore = types
     };
 
     const createGroup = idGroup => {
-      const data = self.fakeDrag.getData();
+      const data = self.internaleDraggable.getData();
       const newGroup = GroupModel.create({
         id: idGroup,
         width: data.width,
@@ -86,7 +92,7 @@ const CanvaStore = types
         left: data.x,
         top: data.y,
         zIndex: 10,
-        selectedItems: getSnapshot(self.selectedItems)
+        groupedItems: getSnapshot(self.selectedItems)
       });
 
       self.selectedItems.map(box => {
@@ -96,7 +102,7 @@ const CanvaStore = types
       });
       self.cleanAll();
       self.groups.push(newGroup);
-      self.selectBox(newGroup);
+      self.selectItem(newGroup);
     };
 
     const destroyGroup = () => {
@@ -109,15 +115,15 @@ const CanvaStore = types
           group.top
         );
 
-        group.selectedItems.map(box => {
-          box.idGroup = null;
+        group.groupedItems.map(item => {
+          item.idGroup = null;
 
           const centroCaja = {
-            x: box.left + box.width / 2,
-            y: box.top + box.height / 2
+            x: item.left + item.width / 2,
+            y: item.top + item.height / 2
           };
 
-          const nuevaRotacion = group.rotate + box.rotate;
+          const nuevaRotacion = group.rotate + item.rotate;
 
           const nuevoCentro = rotacionCentro(
             group.left + group.width / 2,
@@ -128,13 +134,13 @@ const CanvaStore = types
           );
 
           const nuevaPosicion = {
-            x: nuevoCentro.x - box.width / 2,
-            y: nuevoCentro.y - box.height / 2
+            x: nuevoCentro.x - item.width / 2,
+            y: nuevoCentro.y - item.height / 2
           };
 
-          box.top = nuevaPosicion.y + newPositionGroup.y;
-          box.left = nuevaPosicion.x + newPositionGroup.x;
-          box.rotate = nuevaRotacion;
+          item.top = nuevaPosicion.y + newPositionGroup.y;
+          item.left = nuevaPosicion.x + newPositionGroup.x;
+          item.rotate = nuevaRotacion;
         });
       });
 
