@@ -1,11 +1,23 @@
 import React, { Component, Fragment } from 'react';
 import { observer } from 'mobx-react';
 import store from '../../Store';
+import { attachResize, destroyResize } from '../../Utils/ResizeItem';
+import { attachIconsResize, destroyIconsResize } from '../../Utils/IconsResize';
 
 import '../../Utils/RotateItem';
 
 const Selector = observer(
   class Selector extends Component {
+    componentDidMount() {
+      attachResize();
+      attachIconsResize();
+    }
+
+    componentWillUnmount() {
+      destroyResize();
+      destroyIconsResize();
+    }
+
     render() {
       return (
         <div

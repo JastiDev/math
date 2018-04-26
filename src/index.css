@@ -91,3 +91,30 @@ html {
   height: 100%;
   position: relative;
 }
+
+/* Cursor class */
+
+html.nw-cursor {
+  cursor: nw-resize;
+}
+html.nm-cursor {
+  cursor: ns-resize;
+}
+html.ne-cursor {
+  cursor: nwse-resize;
+}
+html.sw-cursor {
+  cursor: nwse-resize;
+}
+html.sm-cursor {
+  cursor: ns-resize;
+}
+html.se-cursor {
+  cursor: nwse-resize;
+}
+html.me-cursor {
+  cursor: ew-resize;
+}
+html.mw-cursor {
+  cursor: ew-resize;
+}
