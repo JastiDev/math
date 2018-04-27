@@ -7,8 +7,6 @@ const points = ['nw', 'nm', 'ne', 'em', 'se', 'sm', 'sw', 'wm'];
 
 const attachIconsResize = () => {
   $('.pointers').on('mouseenter', event => {
-    console.log(event);
-    console.log(event.currentTarget);
     changeCursor(event.currentTarget.getAttribute('id'));
     // Do stuff here
   });
