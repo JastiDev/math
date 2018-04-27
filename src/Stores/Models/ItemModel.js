@@ -42,9 +42,15 @@ const ItemModel = types
             array.push(snapShot);
           });
 
-          console.log('Llamamos a la API: ', array);
-
-          return next(call);
+          return next(call, () => {
+            if (array.length > 0) {
+              console.group('Middleware');
+              console.log('Llamamos a la API: ', array);
+              console.log('Mapeo: ');
+              array.map(a => console.log(a));
+              console.groupEnd();
+            }
+          });
         });
       }
     };
