@@ -363,7 +363,7 @@ const scaleY = function(scaleFactor, center = new Point(0, 0)) {
 };
 
 
-export {Point, translate, rotate, scale, scaleDir, scaleX, scaleY};
+export {Point, translate, rotate, scale, scaleDir, scaleX, scaleY, toDegrees, toRadians};
 
 
 /* Examples */
