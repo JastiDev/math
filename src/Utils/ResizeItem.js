@@ -14,6 +14,7 @@ const attachResize = () => {
       console.log(event.currentTarget);
       console.log('Id para saber el tirador currentTarget: ');
       console.log(event.currentTarget.getAttribute('id')); // id del tirador, para saber cual es
+
       console.groupEnd();
       console.group('Datos del Selector: ');
       // Obtener posiciones del selector con respecto a la ventana
@@ -54,8 +55,36 @@ const attachResize = () => {
       console.log('h: ' + $slide.height());
       console.groupEnd();
     },
-    onmove: event => {},
-    onend: event => {}
+    onmove: event => {
+      // AQUÍ VA TODA LA LÓGICA DE HACER LOS CALCULOS
+      console.log(
+        'Delta Nativo X: ' + event.dx + ' Delta Nativo Y: ' + event.dy
+      );
+      console.log(
+        'Delta Escalado X: ' +
+          event.dx / store.delta +
+          'Delta Escalado Y: ' +
+          event.dy / store.delta
+      );
+    },
+    onend: event => {
+      // AQUÍ SE GUARDAN LOS DATOS DE ESTA FORMA NORMALMENTE:
+      store.selectedItems.map(item => {
+        // Convertimos el item a un node de jQuery para mayor comodidad
+        const $item = $(item.node);
+        // Como el objeto se mueve a través del DOM y no del store
+        // La obtención final de los datos la obtenemos siempre de lo
+        // que tenemos en pantalla y nos dice el CSS
+        const posicionFinalXDelItem = parseFloat($item.css('left'));
+        const posicionFinalYDelItem = parseFloat($item.css('top'));
+        item.setPosition(posicionFinalXDelItem, posicionFinalYDelItem);
+        const anchoFinal = $item.width();
+        const altoFinal = $item.height();
+        item.setSize(anchoFinal, altoFinal);
+        const rotaciónFinal = getRotationDegrees($item);
+        item.setRotation(rotaciónFinal);
+      });
+    }
   });
 };
 const destroyResize = () => {
