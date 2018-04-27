@@ -11,7 +11,7 @@ export default observer(
     constructor(props) {
       super(props);
       this.node = React.createRef();
-      this.debugAxis = true;
+      this.debugAxis = false;
     }
 
     componentDidMount() {
