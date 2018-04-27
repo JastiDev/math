@@ -42,6 +42,14 @@ const attachResize = () => {
         console.log('w: ' + $item.width());
         console.log('h: ' + $item.height());
         console.log('Rotación del item: ' + getRotationDegrees($item));
+
+        console.log('Valores del item en el store: ');
+        console.log('x: ' + item.left);
+        console.log('y: ' + item.top);
+        console.log('w: ' + item.width);
+        console.log('h: ' + item.height);
+        console.log('r: ' + item.rotate);
+
         console.groupEnd();
       });
       console.groupEnd();
@@ -56,6 +64,7 @@ const attachResize = () => {
       console.groupEnd();
     },
     onmove: event => {
+      console.group('Movimiento: ');
       // AQUÍ VA TODA LA LÓGICA DE HACER LOS CALCULOS
       console.log(
         'Delta Nativo X: ' + event.dx + ' Delta Nativo Y: ' + event.dy
@@ -66,6 +75,14 @@ const attachResize = () => {
           'Delta Escalado Y: ' +
           event.dy / store.delta
       );
+
+      store.selectedItems.map(item => {
+        // Hacer cosas con el ITEM
+        // Si queremos trabajar sobre el nodo: item.node
+        // Si queremos convertirlo a jquery: $(item.node)
+      });
+
+      console.groupEnd();
     },
     onend: event => {
       // AQUÍ SE GUARDAN LOS DATOS DE ESTA FORMA NORMALMENTE:
