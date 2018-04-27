@@ -11,7 +11,7 @@
  *
  * @return {Number} - same angle measure in degrees.
  */
-var toDegrees = function(angle) {
+const toDegrees = function(angle) {
   return angle * (180 / Math.PI);
 };
 
@@ -21,7 +21,7 @@ var toDegrees = function(angle) {
  *
  * @return {Number} - same angle measure in radians.
  */
-var toRadians = function(angle) {
+const toRadians = function(angle) {
   return angle * (Math.PI / 180);
 };
 
@@ -115,91 +115,6 @@ class Point {
     // return Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
   }
 
-  // TODO ¿define `angleToDirection`, normalize?
-
-  /*
-     * Get the opposite (symmetric point with respect to the origin)
-     * of a point.
-     *
-     * @return {Point} - Opposite point.
-     */
-  static opposite(p) {
-    return new Point(-p.x, -p.y);
-  }
-
-  /* 
-     * Rotation of a point a given angle around the origin
-     *
-     * @return {Function} - Rotation around the origin.
-     */
-  static rotate(angle) {
-    return function(p) {
-      return new Point(
-        p.x * Math.cos(toRadians(angle)) - p.y * Math.sin(toRadians(angle)),
-        p.x * Math.sin(toRadians(angle)) + p.y * Math.cos(toRadians(angle)),
-      );
-    };
-  }
-
-  /* 
-     * Scale with respect to the origin constructor. Returns a (proportional) 
-     * scale of center the origin and *ratio* `scaleFactor`.
-     *
-     * @param {Number} scaleFactor - Scale factor.
-     * If scaleFactor is negative the resulting transformation will be 
-     * the composition of a homothety with an inversion with respect to
-     * the origin.
-     * @see https://en.wikipedia.org/wiki/Homothetic_transformation
-     *
-     * @return {Function} A (proportional) scale of ratio `scaleFactor` and 
-     * center the origin.
-     */
-  static scale(scaleFactor) {
-    return function(p) {
-      return new Point(scaleFactor * p.x, scaleFactor * p.y);
-    };
-  }
-
-  /* 
-     * Scale in the X direction constructor. Returns a (non-proportional) scale 
-     * in the X direction of center the origin and *ratio* `scaleFactor`.
-     *
-     * @param {Number} scaleFactor - Scale factor (ratio of the dilation).
-     * If scaleFactor is negative the resulting transformation will be 
-     * the composition of a homothety with an inversion with respect to
-     * the origin.
-     * @see https://en.wikipedia.org/wiki/Homothetic_transformation
-     * @param {Point} center - center of the scale.
-     *
-     * @return {Function} An (non-proportional) scale function in the director 
-     * of X axis of ratio scaleFactor and center the origin.
-     */
-  static scaleX(scaleFactor) {
-    return function(p) {
-      return new Point(scaleFactor * p.x, p.y);
-    };
-  }
-
-  /* 
-     * Scale in the Y direction constructor. Returns a (non-proportional) scale 
-     * in the Y direction of center the origin and *ratio* `scaleFactor`.
-     *
-     * @param {Number} scaleFactor - Scale factor (ratio of the dilation).
-     * If scaleFactor is negative the resulting transformation will be 
-     * the composition of a homothety with an inversion with respect to
-     * the origin.
-     * @see https://en.wikipedia.org/wiki/Homothetic_transformation
-     * @param {Point} center - center of the scale.
-     *
-     * @return {Function} A (non-proportional) scale function in the director 
-     * of Y axis of ratio scaleFactor and center the origin.
-     */
-  static scaleY(scaleFactor) {
-    return function(p) {
-      return new Point(p.x, scaleFactor * p.y);
-    };
-  }
-
   /* 
      * Show the point coordinates in the console
      */
@@ -209,6 +124,126 @@ class Point {
 }
 
 /*
+ * We now define the plane transformations needed in the app.
+ * We first declare the primitive transformation:
+ * - Rotations with respecto to the origin `rotateOrigin`
+ * - Scale with respect to the origin `scaleDirOrigin`, `scaleOrigin`, 
+ *   `scaleXOrigin` and `scaleYOrigin`
+ * - Translations `translate`
+ *
+ * This transformations (except `translate`) are not exported.
+ *
+ * Secondly, the class declare the transformations with center an arbitrary 
+ * point using the technique of *conjugating* with appropriate translations 
+ * (see `moveTransformOrigin`):
+ * - Rotations by a given angle around a point: `rotate`
+ * - Scale by a given factor with center a point: `scale`, `scaleX`, 
+ *   `scaleY`, `scaleDir`
+ */
+
+/*
+ * Get the opposite (symmetric point with respect to the origin)
+ * of a point.
+ *
+ * @return {Point} - Opposite point.
+ */
+const opposite = function(p) {
+  return new Point(-p.x, -p.y);
+};
+
+/* 
+ * Rotation of a point a given angle around the origin
+ *
+ * @return {Function} - Rotation around the origin.
+ */
+const rotateOrigin = function(angle) {
+  return function(p) {
+    return new Point(
+      p.x * Math.cos(toRadians(angle)) - p.y * Math.sin(toRadians(angle)),
+      p.x * Math.sin(toRadians(angle)) + p.y * Math.cos(toRadians(angle))
+    );
+  };
+};
+
+/*
+ * Scale with respect to a given direction v = (v.x, v.y). Returns a 
+ * (generally non-proportional) scale of center the origin and *ratio* 
+ * v.x in the X-direction and v.y in the Y-direction
+ *
+ * @param {Point} v - Vector that defined the scale.
+ *
+ * @return {Function} scale acording to the direction of v.
+ */
+const scaleDirOrigin = function(v){
+  return function(p){
+    return new Point(v.x * p.x, v.y * p.y);
+  };
+};
+
+/* 
+ * Scale with respect to the origin constructor. Returns a (proportional) 
+ * scale of center the origin and *ratio* `scaleFactor`.
+ *
+ * @param {Number} scaleFactor - Scale factor.
+ * If scaleFactor is negative the resulting transformation will be 
+ * the composition of a homothety with an inversion with respect to
+ * the origin.
+ * @see https://en.wikipedia.org/wiki/Homothetic_transformation
+ *
+ * @return {Function} A (proportional) scale of ratio `scaleFactor` and 
+ * center the origin.
+ */
+const scaleOrigin = function(scaleFactor) {
+  // Equivalent to this.scaleDirOrigin(scaleFactor, scaleFactor)
+  return function(p) {
+    return new Point(scaleFactor * p.x, scaleFactor * p.y);
+  };
+};
+
+
+/* 
+ * Scale in the X direction constructor. Returns a (non-proportional) scale 
+ * in the X direction of center the origin and *ratio* `scaleFactor`.
+ *
+ * @param {Number} scaleFactor - Scale factor (ratio of the dilation).
+ * If scaleFactor is negative the resulting transformation will be 
+ * the composition of a homothety with an inversion with respect to
+ * the origin.
+ * @see https://en.wikipedia.org/wiki/Homothetic_transformation
+ * @param {Point} center - center of the scale.
+ *
+ * @return {Function} An (non-proportional) scale function in the director 
+ * of X axis of ratio scaleFactor and center the origin.
+ */
+const scaleXOrigin = function(scaleFactor) {
+  // Equivalent to this.scaleDirOrigin(scaleFactor, 0)
+  return function(p) {
+    return new Point(scaleFactor * p.x, p.y);
+  };
+};
+
+/* 
+ * Scale in the Y direction constructor. Returns a (non-proportional) scale 
+ * in the Y direction of center the origin and *ratio* `scaleFactor`.
+ *
+ * @param {Number} scaleFactor - Scale factor (ratio of the dilation).
+ * If scaleFactor is negative the resulting transformation will be 
+ * the composition of a homothety with an inversion with respect to
+ * the origin.
+ * @see https://en.wikipedia.org/wiki/Homothetic_transformation
+ * @param {Point} center - center of the scale.
+ *
+ * @return {Function} A (non-proportional) scale function in the director 
+ * of Y axis of ratio scaleFactor and center the origin.
+ */
+const scaleYOrigin = function(scaleFactor) {
+  // Equivalent to this.scaleDirOrigin(0, scaleFactor)
+  return function(p) {
+    return new Point(p.x, scaleFactor * p.y);
+  };
+};
+
+/*
  * Returns a translation (function) in a given direction 
  * (math vector (0,0)->(vector.x, vector.y) represented by 
  * the Point (vector.x, vector.y) in the plane).
@@ -216,15 +251,15 @@ class Point {
  *
  * @return {Function} - translation of vector `(vector.x, vector.y)`
  */
-var translate = function(vector) {
+const translate = function(vector) {
   return function(point) {
     /*
-         * Translation of vector  
-         * (a, b) => (a + vector.x, b + vector.y)
-         * @param {Point} point - Point to translate
-         *
-         * @return {Point} - translated point along `vector`
-         */
+     * Translation of vector  
+     * (a, b) => (a + vector.x, b + vector.y)
+     * @param {Point} point - Point to translate
+     *
+     * @return {Point} - translated point along `vector`
+     */
     return new Point(point.x + vector.x, point.y + vector.y);
   };
 };
@@ -246,10 +281,10 @@ var translate = function(vector) {
  *
  * @return {Function} - Conjugated transformation by the translation of point.
  */
-var moveTransformOrigin = function(transformation, point) {
+const moveTransformOrigin = function(transformation, point) {
   return function(p) {
     return translate(point)(
-      transformation(translate(Point.opposite(point))(p)),
+      transformation(translate(opposite(point))(p))
     );
   };
 };
@@ -261,8 +296,8 @@ var moveTransformOrigin = function(transformation, point) {
  *
  * @return {Function} - Rotation of `angle` around `(centerX, centerY)`
  */
-var rotate = function(angle, center = new Point(0, 0)) {
-  return moveTransformOrigin(Point.rotate(angle), center);
+const rotate = function(angle, center = new Point(0, 0)) {
+  return moveTransformOrigin(rotateOrigin(angle), center);
 };
 
 /*
@@ -276,13 +311,28 @@ var rotate = function(angle, center = new Point(0, 0)) {
  * @return {Function} - (proportional) scale with respect to the point `center` and
  * scale factor `scaleFactor`
  */
-var scale = function(scaleFactor, center = new Point(0, 0)) {
-  return moveTransformOrigin(Point.scale(scaleFactor), center);
+const scale = function(scaleFactor, center = new Point(0, 0)) {
+  return moveTransformOrigin(scaleOrigin(scaleFactor), center);
+};
+
+/*
+ * Scale in the direction of a vector v = (v.x, v.y) with respect to a 
+ * given point constructor.
+ * Returns a (generally non-proportional) scale of center a given point 
+ * `center` and scale factor v.x in the X-direction and v.y in the Y-direction
+ *
+ * @param {Point} v - Vector that defined the scale.
+ * @param {Point} center - center of scaling.
+ *
+ * @return {Function} scale in the direction of `v` with respect to `center`
+ */
+const scaleDir = function(v, center = new Point(0, 0)){
+  return moveTransformOrigin(scaleDirOrigin(v), center);
 };
 
 /*
  * Scale in the X direction with respect to a given point constructor. 
- * Returns a (proportional) scale of center a given point `center` and
+ * Returns a (non-proportional) scale of center a given point `center` and
  * scale factor `scaleFactor`
  *
  * @param {Number} scaleFactor - scale factor of the transformation.
@@ -291,13 +341,14 @@ var scale = function(scaleFactor, center = new Point(0, 0)) {
  * @return {Function} - (non-proportional) scale in the X direction with 
  * respect to the point `center` and scale factor `scaleFactor`
  */
-var scaleX = function(scaleFactor, center = new Point(0, 0)) {
-  return moveTransformOrigin(Point.scaleX(scaleFactor), center);
+const scaleX = function(scaleFactor, center = new Point(0, 0)) {
+  // Equivalent scaleDir({x: scaleFactor, y:0}, center);
+  return moveTransformOrigin(scaleXOrigin(scaleFactor), center);
 };
 
 /*
  * Scale in the Y direction with respect to a given point constructor. 
- * Returns a (proportional) scale of center a given point `center` and
+ * Returns a (non-proportional) scale of center a given point `center` and
  * scale factor `scaleFactor`
  *
  * @param {Number} scaleFactor - scale factor of the transformation.
@@ -306,9 +357,14 @@ var scaleX = function(scaleFactor, center = new Point(0, 0)) {
  * @return {Function} - (non-proportional) scale in the Y direction with 
  * respect to the point `center` and scale factor `scaleFactor`
  */
-var scaleY = function(scaleFactor, center = new Point(0, 0)) {
-  return moveTransformOrigin(Point.scaleY(scaleFactor), center);
+const scaleY = function(scaleFactor, center = new Point(0, 0)) {
+  // Equivalent scaleDir({x: 0, y:scaleFactor}, center);
+  return moveTransformOrigin(scaleYOrigin(scaleFactor), center);
 };
+
+
+export {Point, translate, rotate, scale, scaleDir, scaleX, scaleY};
+
 
 /* Examples */
 
@@ -321,10 +377,10 @@ var scaleY = function(scaleFactor, center = new Point(0, 0)) {
 // console.log(f);
 // var r = f(p);
 // r.log();
-console.log('Rotation of (1,-1) 90º around the origin');
-let p = new Point(1, 0);
-p.log();
-let q = new Point(0, 1);
-q.log();
-console.log(q.length);
-rotate(90, q)(p).log();
+// console.log('Rotation of (1,-1) 90º around the origin');
+// let p = new Point(1, 0);
+// p.log();
+// let q = new Point(0, 1);
+// q.log();
+// console.log(q.length);
+// scaleDir({x: 10, y:20}, q)(p).log();
