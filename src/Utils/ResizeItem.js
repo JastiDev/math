@@ -40,6 +40,7 @@ const attachResize = () => {
         console.log('y: ' + parseFloat($item.css('top')));
         console.log('w: ' + $item.width());
         console.log('h: ' + $item.height());
+        console.log('Rotación del item: ' + getRotationDegrees($item));
         console.groupEnd();
       });
       console.groupEnd();
