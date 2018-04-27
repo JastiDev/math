@@ -24,7 +24,8 @@ const attachDrag = item => {
           (parseFloat(selectedItem.node.style.top, 10) || 0) +
           event.dy / store.delta; // THIS IS THE DELTA SCALED
 
-        selectedItem.setPosition(x, y);
+        $(selectedItem.node).css('left', x);
+        $(selectedItem.node).css('top', y);
 
         return null;
       });

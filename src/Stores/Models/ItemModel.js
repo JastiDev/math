@@ -1,4 +1,4 @@
-import { types, getRoot } from 'mobx-state-tree';
+import { types, getRoot, onPatch, addMiddleware } from 'mobx-state-tree';
 
 const ItemModel = types
   .model('ItemModel', {
@@ -33,6 +33,19 @@ const ItemModel = types
       },
       setRotation(rotate) {
         self.rotate = rotate;
+      },
+      afterCreate() {
+        addMiddleware(self, (call, next) => {
+          const array = [];
+
+          onPatch(self, snapShot => {
+            array.push(snapShot);
+          });
+
+          console.log('Llamamos a la API: ', array);
+
+          return next(call);
+        });
       }
     };
   });
