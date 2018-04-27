@@ -4,8 +4,6 @@ import $ from 'jquery';
 import store from '../Store';
 import {
   getRotationDegrees,
-  rot,
-  rotacionCentro,
   rotarItem,
   paintPoint,
   paintDiv
@@ -96,6 +94,7 @@ interact('.pointer9').draggable({
     // empieza en la rotación 90º
     let angle = parseFloat(parseFloat(anguloDelSelector) + 90);
 
+    // TODO: ¿Por qué este cambio para el ángulo?
     if (angle === -89) {
       angle = -90;
     }
@@ -105,12 +104,11 @@ interact('.pointer9').draggable({
 
     // Aplicamos la función rotarCaja por cada una de las cajas
     // seleccionadas. El ángulo de rotación es la diferencia entre
-    // el ángulo inicial del tirador y su ángulo final (en radianes).
+    // el ángulo inicial del tirador y su ángulo final.
     store.selectedItems.map(item =>
       rotarItem(
-        centroDeRotacionReal.x,
-        centroDeRotacionReal.y,
-        (angle - anguloInicialDelSelector) * Math.PI / 180,
+        (angle - anguloInicialDelSelector),
+        centroDeRotacionReal,
         item
       )
     );

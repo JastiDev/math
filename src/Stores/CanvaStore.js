@@ -9,7 +9,8 @@ import {
 } from './Models';
 
 // Math methods
-import { rotacionCentro, getDataForRotatedItems } from '../Utils/Math';
+import { getDataForRotatedItems } from '../Utils/Math';
+import { Point, rotate } from '../Utils/planeTransforms';
 
 const CanvaStore = types
   .model('CanvaStore', {
@@ -111,31 +112,24 @@ const CanvaStore = types
 
     const destroyGroup = () => {
       self.groups.map(group => {
-        const newPositionGroup = rotacionCentro(
-          0,
-          0,
-          group.rotate * Math.PI / 180,
-          group.left,
-          group.top
-        );
+        const initialPositionGroup = new Point(group.left, group.top);
+        const groupCenter = new Point(group.left + group.width/2, group.top + group.height/2);
+
+        // rotate(angle): if not especified the rotate function will
+        // rotate around the origin (0, 0)
+        const newPositionGroup = rotate(group.rotate)(initialPositionGroup);
 
         group.groupedItems.map(item => {
           item.idGroup = null;
 
-          const centroCaja = {
-            x: item.left + item.width / 2,
-            y: item.top + item.height / 2
-          };
+          const centroCaja = new Point(
+            item.left + item.width / 2,
+            item.top + item.height / 2
+          );
 
           const nuevaRotacion = group.rotate + item.rotate;
 
-          const nuevoCentro = rotacionCentro(
-            group.left + group.width / 2,
-            group.top + group.height / 2,
-            group.rotate * Math.PI / 180,
-            centroCaja.x,
-            centroCaja.y
-          );
+          const nuevoCentro = rotate(group.rotate, groupCenter)(centroCaja);
 
           const nuevaPosicion = {
             x: nuevoCentro.x - item.width / 2,
