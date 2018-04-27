@@ -11,6 +11,7 @@ export default observer(
     constructor(props) {
       super(props);
       this.node = React.createRef();
+      this.debugAxis = true;
     }
 
     componentDidMount() {
@@ -49,6 +50,14 @@ export default observer(
           {store.groups.map(group => {
             return <Group key={group.id} group={group} />;
           })}
+          {this.debugAxis ? (
+            <div className="axis">
+              <span className="ex" />
+              <span className="ey" />
+              <span className="exy" />
+              <span className="eyx" />
+            </div>
+          ) : null}
         </div>
       );
     }

@@ -95,26 +95,147 @@ html {
 /* Cursor class */
 
 html.nw-cursor {
-  cursor: nw-resize;
+  cursor: nwse-resize !important;
 }
 html.nm-cursor {
-  cursor: ns-resize;
+  cursor: ns-resize !important;
 }
 html.ne-cursor {
-  cursor: nwse-resize;
+  cursor: nesw-resize !important;
 }
 html.sw-cursor {
-  cursor: nwse-resize;
+  cursor: nesw-resize !important;
 }
 html.sm-cursor {
-  cursor: ns-resize;
+  cursor: ns-resize !important;
 }
 html.se-cursor {
-  cursor: nwse-resize;
+  cursor: nwse-resize !important;
 }
-html.me-cursor {
-  cursor: ew-resize;
+html.em-cursor {
+  cursor: ew-resize !important;
 }
-html.mw-cursor {
-  cursor: ew-resize;
+html.wm-cursor {
+  cursor: ew-resize !important;
+}
+
+/*Debug axis*/
+.axis {
+  background: rgba(0, 0, 0, 0.02);
+  width: 50%;
+  height: 80%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 40px solid rgba(0, 0, 0, 0);
+}
+
+.ex,
+.ey,
+.exy,
+.eyx {
+  width: 100%;
+  height: 1px;
+  background: coral;
+  opacity: 0.7;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+}
+
+.ey {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.exy {
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: aquamarine;
+  opacity: 1;
+}
+
+.eyx {
+  transform: translate(-50%, -50%) rotate(135deg);
+  background: aquamarine;
+  opacity: 1;
+}
+
+.ey::before {
+  content: '0deg';
+  position: absolute;
+  top: -30px;
+  left: 97%;
+  transform: rotate(-90deg);
+  color: gray;
+  font-size: 10px;
+}
+
+.ey::after {
+  content: '180deg';
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  transform: rotate(-90deg);
+  color: gray;
+  font-size: 10px;
+}
+
+.ex::before {
+  content: '270deg';
+  position: absolute;
+  top: -30px;
+  left: 97%;
+  color: gray;
+  font-size: 10px;
+}
+
+.ex::after {
+  content: '90deg';
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  color: gray;
+  font-size: 10px;
+}
+
+.exy::before {
+  content: '315deg';
+  position: absolute;
+  top: -30px;
+  left: 97%;
+  transform: rotate(-45deg);
+  color: gray;
+  font-size: 10px;
+}
+
+.exy::after {
+  content: '135deg';
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  transform: rotate(-45deg);
+  color: gray;
+  font-size: 10px;
+}
+
+.eyx::before {
+  content: '45deg';
+  position: absolute;
+  top: -30px;
+  left: 97%;
+  transform: rotate(-135deg);
+  color: gray;
+  font-size: 10px;
+}
+
+.eyx::after {
+  content: '225deg';
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  transform: rotate(-135deg);
+  color: gray;
+  font-size: 10px;
 }
