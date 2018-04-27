@@ -48,16 +48,16 @@ const Selector = observer(
               </div>
               {store.hideResizingMiddle ? null : (
                 <Fragment>
-                  <div className="pointers midle-point pointer-north">
+                  <div id="nm" className="pointers midle-point pointer-north">
                     <div className="point" />
                   </div>
-                  <div className="pointers midle-point pointer-east">
+                  <div id="em" className="pointers midle-point pointer-east">
                     <div className="point" />
                   </div>
-                  <div className="pointers midle-point pointer-south">
+                  <div id="sm" className="pointers midle-point pointer-south">
                     <div className="point" />
                   </div>
-                  <div className="pointers midle-point pointer-west">
+                  <div id="wm" className="pointers midle-point pointer-west">
                     <div className="point" />
                   </div>
                 </Fragment>
