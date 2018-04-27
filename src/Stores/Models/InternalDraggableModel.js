@@ -4,6 +4,7 @@ import store from '../../Store';
 
 const InternalDraggableModel = types
   .model('InternalDraggableModel', {
+    id: 'fake-drag',
     width: 0,
     height: 0,
     y: 0,
@@ -74,6 +75,9 @@ const InternalDraggableModel = types
 
         return px;
       }
+    },
+    get node() {
+      return document.getElementById(self.id);
     }
   }))
   .actions(self => ({

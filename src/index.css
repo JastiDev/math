@@ -118,3 +118,8 @@ html.me-cursor {
 html.mw-cursor {
   cursor: ew-resize;
 }
+
+#fake-drag {
+  background-color: black;
+  opacity: 0.1;
+}
