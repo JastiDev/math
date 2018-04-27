@@ -37,7 +37,7 @@ const attachResize = () => {
         console.log('Valores con respecto al slide:');
         const $item = $(item.node);
         console.log('x: ' + parseFloat($item.css('left')));
-        console.log('y: ' + parseFloat($item.css('left')));
+        console.log('y: ' + parseFloat($item.css('top')));
         console.log('w: ' + $item.width());
         console.log('h: ' + $item.height());
         console.groupEnd();
