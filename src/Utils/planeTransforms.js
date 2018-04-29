@@ -98,7 +98,7 @@ class Point {
      */
   component(v) {
     // TODO if v = (0, 0) then an overflow error will be produced.
-    return (this.x * v.x + this.y * v.y) / v.length();
+    return (this.x * v.x + this.y * v.y) / v.length;
   }
 
   /* 
@@ -133,7 +133,7 @@ class Point {
  *
  * This transformations (except `translate`) are not exported.
  *
- * Secondly, the class declare the transformations with center an arbitrary 
+ * Secondly, we define the transformations with center an arbitrary 
  * point using the technique of *conjugating* with appropriate translations 
  * (see `moveTransformOrigin`):
  * - Rotations by a given angle around a point: `rotate`
@@ -327,7 +327,12 @@ const scale = function(scaleFactor, center = new Point(0, 0)) {
  * @return {Function} scale in the direction of `v` with respect to `center`
  */
 const scaleDir = function(v, center = new Point(0, 0)){
-  return moveTransformOrigin(scaleDirOrigin(v), center);
+  const dirAngle = center.angle;
+  return function(p){
+    let q = rotate(-dirAngle, center)(p);
+    let scaleQ = moveTransformOrigin(scaleDirOrigin(v), center)(q);
+    return rotate(dirAngle, center)(scaleQ);
+  };
 };
 
 /*
