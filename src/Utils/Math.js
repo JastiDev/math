@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {Point, rotate } from './planeTransforms.js';
+import {Point, translate, rotate, scale } from './planeTransforms.js';
 
 const getRotationDegrees = $obj => {
   let angle = 0;
@@ -28,6 +28,9 @@ const getRotationDegrees = $obj => {
   }
 };
 
+const changeCoordinatesFromWindowToSlide = function(slideTopLeft, delta, point) {
+  return new Point( (point.x - slideTopLeft.x)/delta, (point.y - slideTopLeft.y)/delta);
+};
 // Esta función se usa para pintar puntos en la pantalla y poder
 // depurar de forma correcta
 const paintPoint = (x, y) => {
@@ -87,9 +90,48 @@ const rotarItem = (angle, center, item) => {
   $(item.node).css('transform', 'rotate(' + nuevaRotacion + 'deg)');
 };
 
+/* 
+ * (Visually) proportionally scale `item` with respect to `center` 
+ * The function does not change item properties
+ * 
+ * @param {Number} scaleFactor - scale transformation to apply. 
+ * @param {Point} center - centor of the scale
+ * @param {Item} item - item to scale
+ */
+const scaleItem = (scaleFactor, center, item) => {
+  /*
+   * In order to apply a scale transformation to a box we have to take into 
+   * account that it is equivalent:
+   * 1. Rotate with respect to a point C and then scale with respecto to P
+   * 2. Scale the element with respect to Q = the rotated point P
+   * with respect to C in the oposite direction and then rotate with
+   * respect to a point C
+   */
+
+  // We compute the relevant points of item.
+  const itemCenter = new Point( item.left + item.width / 2, item.top + item.height / 2 );
+
+  // The angle of the box has not changed since scale preserves angles
+  // The new center of item is the *transformed* center by the scale
+  // const itemNewCenter = rotate(item.rotate, itemCenter)(scale(scaleFactor, center)(itemCenter));
+  const itemNewCenter = scale(scaleFactor, center)(itemCenter);
+  const newWidth = scaleFactor * item.width;
+  const newHeight = scaleFactor * item.height;
+  const itemNewTopLeft = translate(new Point(-newWidth/2, -newHeight/2))(itemNewCenter);
+
+  // Visually rotate item using CSS transforms
+  item.node.style.left = itemNewTopLeft.x + 'px'; 
+  item.node.style.top = itemNewTopLeft.y + 'px'; 
+  $(item.node).css({width: newWidth, height: newHeight});
+  $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
+
+};
+
 export {
   rotarItem,
+  scaleItem,
   paintPoint,
   paintDiv,
-  getRotationDegrees
+  getRotationDegrees,
+  changeCoordinatesFromWindowToSlide,
 };
