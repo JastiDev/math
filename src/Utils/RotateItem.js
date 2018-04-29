@@ -47,7 +47,7 @@ interact('.pointer9').draggable({
         x: parseFloat($fakeDrag.css('left')) + $fakeDrag.width() / 2,
         y: parseFloat($fakeDrag.css('top')) + $fakeDrag.height() / 2
       };
-      console.log(centroDeRotacionReal);
+      // console.log(centroDeRotacionReal);
       paintPoint(centroDeRotacionReal.x, centroDeRotacionReal.y);
     } else {
       const $item = $(store.selectedItems[0].node);
@@ -77,7 +77,7 @@ interact('.pointer9').draggable({
       90;
 
     anguloInicialDelSelector = getRotationDegrees($('#selector'));
-    console.log('Ángulo inicial del selector: ' + anguloInicialDelSelector);
+    // console.log('Ángulo inicial del selector: ' + anguloInicialDelSelector);
   },
   onmove: event => {
     // Vamos obteniendo el angulo con respecto
