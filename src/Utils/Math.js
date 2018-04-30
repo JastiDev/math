@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {Point, rotate } from './planeTransforms.js';
+import { Point, rotate } from './planeTransforms.js';
 
 const getRotationDegrees = $obj => {
   let angle = 0;
@@ -18,7 +18,7 @@ const getRotationDegrees = $obj => {
         .split(',');
       let a = values[0];
       let b = values[1];
-      angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+      angle = Math.atan2(b, a) * (180 / Math.PI);
     } else {
       angle = 0;
     }
@@ -62,7 +62,6 @@ const paintDiv = (x, y, w, h) => {
  *
  */
 const rotarItem = (angle, center, item) => {
-
   var centroCaja = new Point(
     item.left + item.width / 2,
     item.top + item.height / 2
@@ -71,25 +70,20 @@ const rotarItem = (angle, center, item) => {
   // Compute the new center of item
   var nuevoCentro = rotate(angle, center)(centroCaja);
 
-  // Compute the new vertex (top left) of item 
+  // Compute the new vertex (top left) of item
   var nuevaPosicion = new Point(
     nuevoCentro.x - item.width / 2,
     nuevoCentro.y - item.height / 2
   );
 
-  // Compute the new `rotate` property of item 
+  // Compute the new `rotate` property of item
   // It is the sum of the initial rotation and the new one
   const nuevaRotacion = angle + item.rotate;
 
   // Visually rotate item using CSS transforms
-  item.node.style.left = nuevaPosicion.x + 'px'; 
-  item.node.style.top = nuevaPosicion.y + 'px'; 
+  item.node.style.left = nuevaPosicion.x + 'px';
+  item.node.style.top = nuevaPosicion.y + 'px';
   $(item.node).css('transform', 'rotate(' + nuevaRotacion + 'deg)');
 };
 
-export {
-  rotarItem,
-  paintPoint,
-  paintDiv,
-  getRotationDegrees
-};
+export { rotarItem, paintPoint, paintDiv, getRotationDegrees };
