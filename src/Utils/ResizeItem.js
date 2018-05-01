@@ -4,16 +4,19 @@ import $ from 'jquery';
 import { getRotationDegrees, changeCoordinatesFromWindowToSlide, scaleItem } from './Math';
 import {Point, rotate } from './planeTransforms.js';
 
-var scaleCenter = new Point(0,0);
-var scaleDirection = new Point(0,0);
-var scaleFactor = 0;
 var selector;
+var scaleCenter = new Point(0,0);     // Center of the scale transformation
+var scaleFactor = 0;                  // Scale factor to apply
+
+// Direction of the mouse movement that will be consider to scale the element
+var scaleDirection = new Point(0,0);
+// Amount of mouse movement in the scaleDirection normalize by store.delta
+var scaleDelta = 0;
 
 const attachResize = () => {
   interact('.pointers').draggable({
     onstart: event => {
       const slide = document.getElementById('slide').getBoundingClientRect();
-      const slideTopLeft = new Point(slide.x, slide.y);
 
       // Coordinates of selector with respect to browser window
       const selectorFromWindow = new Point(
@@ -26,16 +29,19 @@ const attachResize = () => {
         store.delta, 
         selectorFromWindow
       );
-      // We add to selector its width, height and angle
+      // We add to selector its width, height, angle and diagonal length
       selector.width = parseFloat(store.selector.node.style.width)/store.delta;
       selector.height = parseFloat(store.selector.node.style.height)/store.delta;
       selector.rotate = getRotationDegrees($(store.selector.node));
-      console.log(selector);
+      selector.diagonal = Math.hypot(selector.width, selector.height);
+
+      // Reset the scaleDelta after a complete scaling
+      scaleDelta = 0;
 
       // id del tirador: 
       // - 'nm', 'wm', 'em', 'sm' Puntos medios
       // - 'ne', 'nw', 'se', 'sw' Esquinas
-      console.log(event.currentTarget.getAttribute('id')); // id del tirador, para saber cual es
+      // console.log(event.currentTarget.getAttribute('id')); 
 
       // Compute the center of the scale. It is the opposite point selected
       // by the user. Observe that selector.x, selector.y) is the top left
@@ -110,8 +116,12 @@ const attachResize = () => {
           scaleDirection = new Point( -selector.width, 0);
           break;
       }
-      scaleDirection.log();
+      // scaleCenter and scaleDirection are computed with respect to the 
+      // selector before applying an eventual rotation. We have to apply 
+      // to them the same rotation as the selector element to correctly 
+      // get its coordinates in the slide
       scaleCenter = rotate(selector.rotate, new Point(selector.x + selector.width/2, selector.y + selector.height/2))(scaleCenter);
+      scaleDirection = rotate(selector.rotate)(scaleDirection);
 
 
 
@@ -215,35 +225,14 @@ const attachResize = () => {
       // console.groupEnd();
     },
     onmove: event => {
-      // console.group('Movimiento: ');
-      // // AQUÍ VA TODA LA LÓGICA DE HACER LOS CALCULOS
-      // console.log(
-      //   'Delta Nativo X: ' + event.dx + ' Delta Nativo Y: ' + event.dy
-      // );
-      // console.log(
-      //   'Delta Escalado X: ' +
-      //     event.dx / store.delta +
-      //     'Delta Escalado Y: ' +
-      //     event.dy / store.delta
-      // );
-      // console.groupEnd();
-
       var userPull = new Point(event.dx, event.dy);
-      userPull.log();
-      scaleDirection.log();
-      scaleFactor += userPull.component(scaleDirection);
-      // scaleFactor += event.dx;
-      console.log('scaleFactor = ' + scaleFactor);
+      scaleDelta += userPull.component(scaleDirection) / store.delta;
+      scaleFactor = (selector.diagonal + scaleDelta) / selector.diagonal;
+
+      // TODO update the scale of the selector
       
       store.selectedItems.map(item => {
-        scaleItem((selector.width + scaleFactor)/selector.width, scaleCenter, item);
-        // item.node.style.left += scaleFactor + 'px'; 
-        // item.node.style.top += scaleFactor + 'px'; 
-        // $(item.node).css({width: item.width + scaleFactor, height: item.height + scaleFactor});
-        // $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
-        // Hacer cosas con el ITEM
-        // Si queremos trabajar sobre el nodo: item.node
-        // Si queremos convertirlo a jquery: $(item.node)
+        scaleItem(scaleFactor, scaleCenter, item);
       });
 
     },
@@ -261,6 +250,7 @@ const attachResize = () => {
         item.setPosition(posicionFinalXDelItem, posicionFinalYDelItem);
         const anchoFinal = $item.width();
         const altoFinal = $item.height();
+        // TODO: Al escalar un grupo da error la siguiente función.
         item.setSize(anchoFinal, altoFinal);
         const rotaciónFinal = getRotationDegrees($item);
         item.setRotation(rotaciónFinal);
