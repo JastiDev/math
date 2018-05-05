@@ -113,8 +113,8 @@ const attachResize = () => {
           break;
         case 'wm':
           scaleCenter = new Point(
-            selector.x, 
-            selector.y + selector.width/2
+            selector.x + selector.width, 
+            selector.y + selector.height/2
           );
           scaleDirection = new Point( -selector.width, 0);
           break;
