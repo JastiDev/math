@@ -97,8 +97,8 @@ const rotarItem = (angle, center, item) => {
  * (Visually) proportionally scale `item` with respect to `center` 
  * The function does not change item properties
  * 
- * @param {Number} scaleFactor - scale transformation to apply. 
- * @param {Point} center - centor of the scale
+ * @param {Number} scaleFactor - scale factor to apply. 
+ * @param {Point} center - center of the scale
  * @param {Item} item - item to scale
  */
 const scaleItem = (scaleFactor, center, item) => {
@@ -127,7 +127,6 @@ const scaleItem = (scaleFactor, center, item) => {
   item.node.style.top = itemNewTopLeft.y + 'px'; 
   $(item.node).css({width: newWidth, height: newHeight});
   $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
-
 };
 
 export {
