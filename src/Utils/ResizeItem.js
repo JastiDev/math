@@ -1,10 +1,11 @@
 import interact from 'interactjs';
 import store from '../Store';
 import $ from 'jquery';
-import { getRotationDegrees, changeCoordinatesFromWindowToSlide, scaleItem } from './Math';
-import {Point, rotate } from './planeTransforms.js';
+import { getRotationDegrees, changeCoordinatesFromWindowToSlide, changeCoordinatesFromSlideToWindow, scaleItem } from './Math';
+import {Point, rotate, translate, scale } from './planeTransforms.js';
 
 var selector;
+var slide;
 var scaleCenter = new Point(0,0);     // Center of the scale transformation
 var scaleFactor = 0;                  // Scale factor to apply
 
@@ -13,10 +14,11 @@ var scaleDirection = new Point(0,0);
 // Amount of mouse movement in the scaleDirection normalize by store.delta
 var scaleDelta = 0;
 
+
 const attachResize = () => {
   interact('.pointers').draggable({
     onstart: event => {
-      const slide = document.getElementById('slide').getBoundingClientRect();
+      slide = document.getElementById('slide').getBoundingClientRect();
 
       // Coordinates of selector with respect to browser window
       const selectorFromWindow = new Point(
@@ -30,6 +32,7 @@ const attachResize = () => {
         selectorFromWindow
       );
       // We add to selector its width, height, angle and diagonal length
+      // with respect to the slide (store.delta scaled)
       selector.width = parseFloat(store.selector.node.style.width)/store.delta;
       selector.height = parseFloat(store.selector.node.style.height)/store.delta;
       selector.rotate = getRotationDegrees($(store.selector.node));
@@ -229,7 +232,24 @@ const attachResize = () => {
       scaleDelta += userPull.component(scaleDirection) / store.delta;
       scaleFactor = (selector.diagonal + scaleDelta) / selector.diagonal;
 
-      // TODO update the scale of the selector
+      // We move the top-left vertex of the selector according with the 
+      // applied transformation
+      const selectorNewCenter = scale(scaleFactor, scaleCenter)(
+        new Point(selector.x + selector.width/2, selector.y + selector.height/2)
+      );
+      let selectorNewTopLeft = translate(new Point(-selector.width*scaleFactor/2, -selector.height*scaleFactor/2))(selectorNewCenter);
+      // We transform coordinates from slide to window
+      selectorNewTopLeft = changeCoordinatesFromSlideToWindow(slide, store.delta, selectorNewTopLeft);
+      // Position #selector in the window. It is not necessary to `rotate`
+      // again the element since the scale does not affect the rotation of
+      // the element.
+      $('#selector').css({ left: selectorNewTopLeft.x, top: selectorNewTopLeft.y });
+
+      // Finally we *scale* the selector. We have to take into account that
+      // the coordinate system for the selector is outside the slide so
+      // we have to correct the scale factor by `store.delta`
+      $('#selector').css({width: selector.width*scaleFactor*store.delta, height: selector.height*scaleFactor*store.delta});
+
       
       store.selectedItems.map(item => {
         scaleItem(scaleFactor, scaleCenter, item);
@@ -238,6 +258,12 @@ const attachResize = () => {
     },
     onend: event => {
       scaleFactor = 0;
+
+      // TODO Actualizar la información del selector. Si se componen dos
+      // tipos de movimientos (p.e. un escalado y una rotación) no se realiza
+      // correctamente puesto que en el segundo movimiento se aplica la 
+      // información del selector inicial.
+
       // AQUÍ SE GUARDAN LOS DATOS DE ESTA FORMA NORMALMENTE:
       store.selectedItems.map(item => {
         // Convertimos el item a un node de jQuery para mayor comodidad

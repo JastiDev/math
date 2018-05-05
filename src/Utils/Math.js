@@ -31,6 +31,9 @@ const getRotationDegrees = $obj => {
 const changeCoordinatesFromWindowToSlide = function(slideTopLeft, delta, point) {
   return new Point( (point.x - slideTopLeft.x)/delta, (point.y - slideTopLeft.y)/delta);
 };
+const changeCoordinatesFromSlideToWindow = function(slideTopLeft, delta, point) {
+  return new Point( delta*point.x + slideTopLeft.x, delta*point.y + slideTopLeft.y );
+};
 // Esta función se usa para pintar puntos en la pantalla y poder
 // depurar de forma correcta
 const paintPoint = (x, y) => {
@@ -134,4 +137,5 @@ export {
   paintDiv,
   getRotationDegrees,
   changeCoordinatesFromWindowToSlide,
+  changeCoordinatesFromSlideToWindow,
 };
