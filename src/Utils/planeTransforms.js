@@ -165,21 +165,6 @@ const rotateOrigin = function(angle) {
   };
 };
 
-/*
- * Scale with respect to a given direction v = (v.x, v.y). Returns a 
- * (generally non-proportional) scale of center the origin and *ratio* 
- * v.x in the X-direction and v.y in the Y-direction
- *
- * @param {Point} v - Vector that defined the scale.
- *
- * @return {Function} scale acording to the direction of v.
- */
-const scaleDirOrigin = function(v){
-  return function(p){
-    return new Point(v.x * p.x, v.y * p.y);
-  };
-};
-
 /* 
  * Scale with respect to the origin constructor. Returns a (proportional) 
  * scale of center the origin and *ratio* `scaleFactor`.
@@ -194,12 +179,28 @@ const scaleDirOrigin = function(v){
  * center the origin.
  */
 const scaleOrigin = function(scaleFactor) {
-  // Equivalent to this.scaleDirOrigin(scaleFactor, scaleFactor)
   return function(p) {
     return new Point(scaleFactor * p.x, scaleFactor * p.y);
   };
 };
 
+/*
+ * Non-proportional scale only in a given direction v = (v.x, v.y) by
+ * a scale factor. 
+ *
+ * @param {Number} scaleFactor - scale factor to apply. 
+ * @param {Point} v - Vector that defined the direction the scale is applied.
+ *
+ * @return {Function} scale in the v direction by scaleFactor.
+ */
+const scaleDirOrigin = function(scaleFactor, v){
+  return function(p){
+    p = rotateOrigin(-v.angle)(p);
+    let q = new Point(scaleFactor*p.x, p.y);
+    q = rotateOrigin(v.angle)(q);
+    return q;
+  };
+};
 
 /* 
  * Scale in the X direction constructor. Returns a (non-proportional) scale 
@@ -216,7 +217,7 @@ const scaleOrigin = function(scaleFactor) {
  * of X axis of ratio scaleFactor and center the origin.
  */
 const scaleXOrigin = function(scaleFactor) {
-  // Equivalent to this.scaleDirOrigin(scaleFactor, 0)
+  // Equivalent to this.scaleDirOrigin(scaleFactor, {x:1, y:0})
   return function(p) {
     return new Point(scaleFactor * p.x, p.y);
   };
@@ -237,7 +238,7 @@ const scaleXOrigin = function(scaleFactor) {
  * of Y axis of ratio scaleFactor and center the origin.
  */
 const scaleYOrigin = function(scaleFactor) {
-  // Equivalent to this.scaleDirOrigin(0, scaleFactor)
+  // Equivalent to this.scaleDirOrigin(scaleFactor, {x:0, y:1})
   return function(p) {
     return new Point(p.x, scaleFactor * p.y);
   };
@@ -316,23 +317,19 @@ const scale = function(scaleFactor, center = new Point(0, 0)) {
 };
 
 /*
- * Scale in the direction of a vector v = (v.x, v.y) with respect to a 
- * given point constructor.
- * Returns a (generally non-proportional) scale of center a given point 
- * `center` and scale factor v.x in the X-direction and v.y in the Y-direction
+ * Non-proportional scale only in a given direction v by a scale factor. 
+ * Returns a non-proportional scale of center a given point 
+ * `center` and ´scaleFactor` only in the direction given by v. 
  *
+ * @param {Number} scaleFactor - scale factor of the transformation
  * @param {Point} v - Vector that defined the scale.
  * @param {Point} center - center of scaling.
  *
- * @return {Function} scale in the direction of `v` with respect to `center`
+ * @return {Function} scale by `scaleFactor` in the direction of `v` with 
+ * respect to `center`
  */
-const scaleDir = function(v, center = new Point(0, 0)){
-  const dirAngle = center.angle;
-  return function(p){
-    let q = rotate(-dirAngle, center)(p);
-    let scaleQ = moveTransformOrigin(scaleDirOrigin(v), center)(q);
-    return rotate(dirAngle, center)(scaleQ);
-  };
+const scaleDir = function(scaleFactor, v, center = new Point(0, 0)){
+  return moveTransformOrigin(scaleDirOrigin(scaleFactor, v), center);
 };
 
 /*
