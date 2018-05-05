@@ -1,13 +1,15 @@
 import interact from 'interactjs';
 import store from '../Store';
 import $ from 'jquery';
-import { getRotationDegrees, changeCoordinatesFromWindowToSlide, changeCoordinatesFromSlideToWindow, scaleItem } from './Math';
-import {Point, rotate, translate, scale } from './planeTransforms.js';
+import { getRotationDegrees, changeCoordinatesFromWindowToSlide, changeCoordinatesFromSlideToWindow, scaleItem, scaleDirItem } from './Math';
+import {Point, rotate, translate, scale} from './planeTransforms.js';
 
 var selector;
 var slide;
 var scaleCenter = new Point(0,0);     // Center of the scale transformation
 var scaleFactor = 0;                  // Scale factor to apply
+
+var clickPoint = ''; // vertex of the selector clicked by the user
 
 // Direction of the mouse movement that will be consider to scale the element
 var scaleDirection = new Point(0,0);
@@ -46,13 +48,14 @@ const attachResize = () => {
       // - 'ne', 'nw', 'se', 'sw' Esquinas
       // console.log(event.currentTarget.getAttribute('id')); 
 
+      clickPoint = event.currentTarget.getAttribute('id');
       // Compute the center of the scale. It is the opposite point selected
-      // by the user. Observe that selector.x, selector.y) is the top left
+      // by the user. Observe that (selector.x, selector.y) is the top left
       // corner of the selector before selector.rotate (if any)
       // TODO: If p is the point with coordinates with respect to the slide 
       // of the point clicked by the user the following switch can be sustituted by
       // const scaleCenter = rotate(180, new Point(selector.x + selector.width/2, selector.y + selector.height/2))(p);
-      switch(event.currentTarget.getAttribute('id')){
+      switch(clickPoint){
         case 'nw':
           scaleCenter = new Point(
             selector.x + selector.width, 
@@ -97,7 +100,7 @@ const attachResize = () => {
         case 'sm':
           scaleCenter = new Point(
             selector.x + selector.width/2, 
-            selector.y + selector.height
+            selector.y
           );
           scaleDirection = new Point( 0, selector.height);
           break;
@@ -252,7 +255,12 @@ const attachResize = () => {
 
       
       store.selectedItems.map(item => {
-        scaleItem(scaleFactor, scaleCenter, item);
+        if (clickPoint === 'em' || clickPoint === 'nm' || clickPoint === 'wm' || clickPoint === 'sm'){
+          scaleDirItem(scaleFactor, scaleDirection, scaleCenter, item);
+        }
+        else{ 
+          scaleItem(scaleFactor, scaleCenter, item);
+        }
       });
 
     },
