@@ -183,7 +183,6 @@ const attachResize = () => {
           new Point(-newWidth / 2, -newHeight / 2)
         )(selectorNewCenter);
 
-
         // We transform coordinates from slide to window
         selectorNewTopLeft = changeCoordinatesFromSlideToWindow(
           slide,
@@ -230,19 +229,8 @@ const attachResize = () => {
           )
         )(selectorNewCenter);
 
-        // We update the #fake-drag position and dimensions.
-        // It is exactly the same as the selector but before
-        // applying the coordinate change to the window.
-        if (store.selectedItems.length > 1) {
-          store.internaleDraggable.node.style.left = selectorNewTopLeft.x + 'px';
-          store.internaleDraggable.node.style.top = selectorNewTopLeft.y + 'px';
-          store.internaleDraggable.node.style.width = selector.width * scaleFactor + 'px';
-          store.internaleDraggable.node.style.height = selector.height * scaleFactor + 'px';
-        }
-
-
         // We transform coordinates from slide to window
-        selectorNewTopLeft = changeCoordinatesFromSlideToWindow(
+        let selectorNewTopLeftinWindowCoord = changeCoordinatesFromSlideToWindow(
           slide,
           store.delta,
           selectorNewTopLeft
@@ -251,8 +239,8 @@ const attachResize = () => {
         // again the element since the scale does not affect the rotation of
         // the element.
         $('#selector').css({
-          left: selectorNewTopLeft.x,
-          top: selectorNewTopLeft.y,
+          left: selectorNewTopLeftinWindowCoord.x,
+          top: selectorNewTopLeftinWindowCoord.y,
         });
 
         // Finally we *scale* the selector. We have to take into account that
@@ -267,6 +255,16 @@ const attachResize = () => {
         store.selectedItems.map(item => {
           scaleItem(scaleFactor, scaleCenter, item);
         });
+
+        // We update the #fake-drag position and dimensions.
+        // It is exactly the same as the selector but before
+        // applying the coordinate change to the window.
+        if (store.selectedItems.length > 1) {
+          store.internaleDraggable.node.style.left = selectorNewTopLeft.x + 'px';
+          store.internaleDraggable.node.style.top = selectorNewTopLeft.y + 'px';
+          store.internaleDraggable.node.style.width = selector.width * scaleFactor + 'px';
+          store.internaleDraggable.node.style.height = selector.height * scaleFactor + 'px';
+        }
       }
     },
     onend: event => {
