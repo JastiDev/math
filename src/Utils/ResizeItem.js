@@ -5,6 +5,7 @@ import {
   getRotationDegrees,
   changeCoordinatesFromWindowToSlide,
   changeCoordinatesFromSlideToWindow,
+  visuallySetItem,
   scaleItem,
   scaleDirItem,
 } from './Math';
@@ -63,6 +64,8 @@ const attachResize = () => {
       // TODO: If p is the point with coordinates with respect to the slide
       // of the point clicked by the user the following switch can be sustituted by
       // const scaleCenter = rotate(180, new Point(selector.x + selector.width/2, selector.y + selector.height/2))(p);
+      // and `scaleDirection` = p - scaleCenter
+      // document.getelementbyId(clickedPoint).getBoundaryClientRect();
       switch (clickedPoint) {
         case 'nw':
           scaleCenter = new Point(
@@ -121,6 +124,7 @@ const attachResize = () => {
     onmove: event => {
       var userPull = new Point(event.dx, event.dy);
       scaleDelta += userPull.component(scaleDirection) / store.delta;
+      scaleFactor = (scaleDirection.length + scaleDelta) / scaleDirection.length;
 
       // TODO: The transformation applied to the `selector` is exactly the same
       // to the one applied to item. However, since `selector` and `item` do
@@ -141,12 +145,6 @@ const attachResize = () => {
         clickedPoint === 'wm' ||
         clickedPoint === 'sm'
       ) {
-        if (clickedPoint === 'em' || clickedPoint === 'wm') {
-          scaleFactor = (selector.width + scaleDelta) / selector.width;
-        } else {
-          scaleFactor = (selector.height + scaleDelta) / selector.height;
-        }
-
         // Update selector position
         const selectorCenter = new Point(
           selector.x + selector.width / 2,
@@ -210,9 +208,6 @@ const attachResize = () => {
           scaleDirItem(scaleFactor, scaleDirection, scaleCenter, item);
         });
       } else {
-        // Apply the proportional scale
-        scaleFactor = (selector.diagonal + scaleDelta) / selector.diagonal;
-
         // Update selector position
         // We move the top-left vertex of the selector according with the
         // applied transformation
@@ -253,12 +248,22 @@ const attachResize = () => {
 
         // Scale all the selected elements.
         store.selectedItems.map(item => {
-          scaleItem(scaleFactor, scaleCenter, item);
+          if (item.type === 'group'){
+            let newTopLeftGroupContainer = scaleItem(scaleFactor, scaleCenter, item);
+            visuallySetItem(newTopLeftGroupContainer, item);
+            console.log('scaleCenter', scaleCenter);
+            console.log('newTLGC',newTopLeftGroupContainer);
+            item.scale(scaleFactor, scaleCenter, new Point(newTopLeftGroupContainer.left, newTopLeftGroupContainer.top) );
+          } else {
+            visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
+          }
         });
 
+        // TODO: Move to the `ondend` event
         // We update the #fake-drag position and dimensions.
         // It is exactly the same as the selector but before
         // applying the coordinate change to the window.
+        // console.log(store.selectedItems[0].type);
         if (store.selectedItems.length > 1) {
           store.internaleDraggable.node.style.left = selectorNewTopLeft.x + 'px';
           store.internaleDraggable.node.style.top = selectorNewTopLeft.y + 'px';
@@ -268,8 +273,6 @@ const attachResize = () => {
       }
     },
     onend: event => {
-      scaleFactor = 0;
-
       // TODO Actualizar la información del selector. Si se componen dos
       // tipos de movimientos (p.e. un escalado y una rotación) no se realiza
       // correctamente puesto que en el segundo movimiento se aplica la
@@ -277,6 +280,27 @@ const attachResize = () => {
 
       // AQUÍ SE GUARDAN LOS DATOS DE ESTA FORMA NORMALMENTE:
       store.selectedItems.map(item => {
+        if (item.type === 'group'){
+          // visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
+          // console.log(item);
+          // Update the position of each item in the group
+          let groupContainer = item;
+          item.groupedItems.map(item => {
+            const $item = $(item.node);
+            // Como el objeto se mueve a través del DOM y no del store
+            // La obtención final de los datos la obtenemos siempre de lo
+            // que tenemos en pantalla y nos dice el CSS
+            // En esta caso la posición es con respecto al contenedor
+            // del grupo pues cada item es un hijo.
+            const posicionFinalXDelItem = parseFloat($item.css('left'));
+            const posicionFinalYDelItem = parseFloat($item.css('top'));
+            item.setPosition(posicionFinalXDelItem, posicionFinalYDelItem);
+            const anchoFinal = $item.width();
+            const altoFinal = $item.height();
+            item.setSize(anchoFinal, altoFinal);
+          });
+        }
+        // Check if `item` is a group
         // Convertimos el item a un node de jQuery para mayor comodidad
         const $item = $(item.node);
         // Como el objeto se mueve a través del DOM y no del store
@@ -285,13 +309,20 @@ const attachResize = () => {
         const posicionFinalXDelItem = parseFloat($item.css('left'));
         const posicionFinalYDelItem = parseFloat($item.css('top'));
         item.setPosition(posicionFinalXDelItem, posicionFinalYDelItem);
+
         const anchoFinal = $item.width();
         const altoFinal = $item.height();
-        // TODO: Al escalar un grupo da error la siguiente función.
         item.setSize(anchoFinal, altoFinal);
+
         const rotaciónFinal = getRotationDegrees($item);
         item.setRotation(rotaciónFinal);
+
+        if(item.type === 'group'){
+          // visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
+        }
+
       });
+      scaleFactor = 0;
     },
   });
 };

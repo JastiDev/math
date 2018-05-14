@@ -58,6 +58,21 @@ const paintDiv = (x, y, w, h) => {
   }).appendTo('#root');
 };
 
+
+/*
+ * (Visually) Set a box in the slide from new point, width, height and rotate
+ * using CSS transforms
+ *
+ * @param {Object} {left, top, width, height, rotate}
+ */
+const visuallySetItem = ({left, top, width, height, rotate}, item) => {
+  // Visually rotate item using CSS transforms
+  item.node.style.left = left + 'px'; 
+  item.node.style.top = top + 'px'; 
+  $(item.node).css({width: width, height: height});
+  $(item.node).css('transform', 'rotate(' + rotate + 'deg)');
+};
+
 /*
  * (Visually) rotate `item` an `angle` with respect a given `center`
  * The function does not change item properties.
@@ -87,10 +102,12 @@ const rotarItem = (angle, center, item) => {
   // It is the sum of the initial rotation and the new one
   const nuevaRotacion = angle + item.rotate;
 
+  let newItemData = {left: nuevaPosicion.x, top: nuevaPosicion.y, width: item.width, height: item.height, rotate: nuevaRotacion};
+
   // Visually rotate item using CSS transforms
-  item.node.style.left = nuevaPosicion.x + 'px'; 
-  item.node.style.top = nuevaPosicion.y + 'px'; 
-  $(item.node).css('transform', 'rotate(' + nuevaRotacion + 'deg)');
+  visuallySetItem(newItemData, item);
+
+  return newItemData;
 };
 
 /* 
@@ -123,11 +140,17 @@ const scaleItem = (scaleFactor, center, item) => {
   const itemNewTopLeft = translate(new Point(-newWidth/2, -newHeight/2))(itemNewCenter);
 
   // Visually rotate item using CSS transforms
-  item.node.style.left = itemNewTopLeft.x + 'px'; 
-  item.node.style.top = itemNewTopLeft.y + 'px'; 
-  $(item.node).css({width: newWidth, height: newHeight});
-  $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
+  // item.node.style.left = itemNewTopLeft.x + 'px'; 
+  // item.node.style.top = itemNewTopLeft.y + 'px'; 
+  // $(item.node).css({width: newWidth, height: newHeight});
+  // $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
+  
+  let newItemData = {left: itemNewTopLeft.x, top: itemNewTopLeft.y, width: newWidth, height: newHeight, rotate: item.rotate};
+  // visuallySetItem(newItemData, item);
+
+  return newItemData;
 };
+
 
 /* 
  * (Visually) non-proportionally scale `item` with respect to `center` by 
@@ -174,6 +197,7 @@ const scaleDirItem = (scaleFactor, scaleDirection, center, item) => {
 };
 
 export {
+  visuallySetItem,
   rotarItem,
   scaleItem,
   scaleDirItem,
