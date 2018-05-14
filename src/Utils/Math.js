@@ -32,7 +32,7 @@ const changeCoordinatesFromWindowToSlide = function(slideTopLeft, delta, point) 
   return new Point( (point.x - slideTopLeft.x)/delta, (point.y - slideTopLeft.y)/delta);
 };
 const changeCoordinatesFromSlideToWindow = function(slideTopLeft, delta, point) {
-  return new Point( delta*point.x + slideTopLeft.x, delta*point.y + slideTopLeft.y );
+  return new Point( delta*point.x + slideTopLeft.left, delta*point.y + slideTopLeft.top );
 };
 // Esta función se usa para pintar puntos en la pantalla y poder
 // depurar de forma correcta

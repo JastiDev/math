@@ -46,21 +46,20 @@ const GroupModel = types
         self.width = width;
         self.height = height;
       },
-      scale(scaleFactor, scaleCenter, topLeftGroupContainer){
+      scale(scaleFactor, scaleCenter){
         // Update the position, width and height of each children
         self.groupedItems.map(item => {
-          // Since the top-left vertex of each item is computed with respect
-          // to the group top-left corner we change our coordinate system to
-          // the one provided by the group container to do the scale.
-          let newScaleCenter = self.getCoordinatesfromGroup(scaleCenter);
-          // let newScaleCenter = new Point(scaleCenter.x - topLeftGroupContainer.x, scaleCenter.y - topLeftGroupContainer.y);
-          // newScaleCenter.log();
-          let newItemData = scaleItem(scaleFactor, newScaleCenter, item);
-          // newItemData.left -= topLeftGroupContainer.x - self.left; 
-          // newItemData.top -= topLeftGroupContainer.y - self.top; 
-          // Since the origin of coordinates (top-left corner) is changing
-          // with the scaling, the new data of the children (top, left, width, height)
-          // is obtained multiplying the original values by the `scaleFactor`
+          // The scale of the children of the container is easy but 
+          // has to be understood properly. Since the group container itself
+          // is changing with the scale so it is the coordinates origin (the
+          // top left corner of the group container) for the children elements.
+          // However, once we redraw the group container in the slide using
+          // `visuallySetItem` function the `cascade` in the CSS move accordingly
+          // all the children elements (position:absolute is set in the parent).
+          // As a consecuence, the top-left coordinates of each of the children
+          // is computed just multiplying the original one by the scale factor
+          // and so it is the width and height
+          let newItemData = {};
           newItemData.left = item.left * scaleFactor;
           newItemData.top = item.top * scaleFactor;
           newItemData.width = item.width * scaleFactor;
