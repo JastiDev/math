@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import {Point, translate, rotate, scale } from './planeTransforms.js';
+import {Point, translate, rotate, scale, scaleDir } from './planeTransforms.js';
 
 const getRotationDegrees = $obj => {
   let angle = 0;
@@ -31,6 +31,9 @@ const getRotationDegrees = $obj => {
 const changeCoordinatesFromWindowToSlide = function(slideTopLeft, delta, point) {
   return new Point( (point.x - slideTopLeft.x)/delta, (point.y - slideTopLeft.y)/delta);
 };
+const changeCoordinatesFromSlideToWindow = function(slideTopLeft, delta, point) {
+  return new Point( delta*point.x + slideTopLeft.x, delta*point.y + slideTopLeft.y );
+};
 // Esta función se usa para pintar puntos en la pantalla y poder
 // depurar de forma correcta
 const paintPoint = (x, y) => {
@@ -53,6 +56,21 @@ const paintDiv = (x, y, w, h) => {
       'px;',
     class: 'debug-point'
   }).appendTo('#root');
+};
+
+
+/*
+ * (Visually) Set a box in the slide from new point, width, height and rotate
+ * using CSS transforms
+ *
+ * @param {Object} {left, top, width, height, rotate}
+ */
+const visuallySetItem = ({left, top, width, height, rotate}, item) => {
+  // Visually rotate item using CSS transforms
+  item.node.style.left = left + 'px'; 
+  item.node.style.top = top + 'px'; 
+  $(item.node).css({width: width, height: height});
+  $(item.node).css('transform', 'rotate(' + rotate + 'deg)');
 };
 
 /*
@@ -84,18 +102,20 @@ const rotarItem = (angle, center, item) => {
   // It is the sum of the initial rotation and the new one
   const nuevaRotacion = angle + item.rotate;
 
+  let newItemData = {left: nuevaPosicion.x, top: nuevaPosicion.y, width: item.width, height: item.height, rotate: nuevaRotacion};
+
   // Visually rotate item using CSS transforms
-  item.node.style.left = nuevaPosicion.x + 'px'; 
-  item.node.style.top = nuevaPosicion.y + 'px'; 
-  $(item.node).css('transform', 'rotate(' + nuevaRotacion + 'deg)');
+  visuallySetItem(newItemData, item);
+
+  return newItemData;
 };
 
 /* 
  * (Visually) proportionally scale `item` with respect to `center` 
  * The function does not change item properties
  * 
- * @param {Number} scaleFactor - scale transformation to apply. 
- * @param {Point} center - centor of the scale
+ * @param {Number} scaleFactor - scale factor to apply. 
+ * @param {Point} center - center of the scale
  * @param {Item} item - item to scale
  */
 const scaleItem = (scaleFactor, center, item) => {
@@ -120,18 +140,70 @@ const scaleItem = (scaleFactor, center, item) => {
   const itemNewTopLeft = translate(new Point(-newWidth/2, -newHeight/2))(itemNewCenter);
 
   // Visually rotate item using CSS transforms
+  // item.node.style.left = itemNewTopLeft.x + 'px'; 
+  // item.node.style.top = itemNewTopLeft.y + 'px'; 
+  // $(item.node).css({width: newWidth, height: newHeight});
+  // $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
+  
+  let newItemData = {left: itemNewTopLeft.x, top: itemNewTopLeft.y, width: newWidth, height: newHeight, rotate: item.rotate};
+  // visuallySetItem(newItemData, item);
+
+  return newItemData;
+};
+
+
+/* 
+ * (Visually) non-proportionally scale `item` with respect to `center` by 
+ * a given `scaleFactor` in the direction of `scaleDirection`
+ * The function does not change item properties
+ * 
+ * @param {Number} scaleFactor - scale factor to apply. 
+ * @param {Point} center - center of the scale
+ * @param {Item} item - item to scale
+ */
+const scaleDirItem = (scaleFactor, scaleDirection, center, item) => {
+
+  // We compute the relevant points of item.
+  const itemCenter = new Point( item.left + item.width / 2, item.top + item.height / 2 );
+  const itemTopLeft = rotate(item.rotate, itemCenter)(
+    new Point( item.left, item.top )
+  );
+  const itemTopRight = rotate(item.rotate, itemCenter)(
+    new Point( item.left + item.width, item.top )
+  );
+  const itemBottomLeft = rotate(item.rotate, itemCenter)(
+    new Point( item.left, item.top + item.height )
+  );
+
+  // The angle of the box has not changed since scale preserves angles
+  // The new center of item is the *transformed* center by the scale
+  // const itemNewCenter = rotate(item.rotate, itemCenter)(scale(scaleFactor, center)(itemCenter));
+  const itemNewCenter = scaleDir(scaleFactor, scaleDirection, center)(itemCenter);
+  const newWidth = Point.distance(
+    scaleDir(scaleFactor, scaleDirection, center)(itemTopLeft),
+    scaleDir(scaleFactor, scaleDirection, center)(itemTopRight)
+  );
+  const newHeight = Point.distance(
+    scaleDir(scaleFactor, scaleDirection, center)(itemTopLeft),
+    scaleDir(scaleFactor, scaleDirection, center)(itemBottomLeft)
+  );
+  const itemNewTopLeft = translate(new Point(-newWidth/2, -newHeight/2))(itemNewCenter);
+
+  // Visually rotate item using CSS transforms
   item.node.style.left = itemNewTopLeft.x + 'px'; 
   item.node.style.top = itemNewTopLeft.y + 'px'; 
   $(item.node).css({width: newWidth, height: newHeight});
   $(item.node).css('transform', 'rotate(' + item.rotate + 'deg)');
-
 };
 
 export {
+  visuallySetItem,
   rotarItem,
   scaleItem,
+  scaleDirItem,
   paintPoint,
   paintDiv,
   getRotationDegrees,
   changeCoordinatesFromWindowToSlide,
+  changeCoordinatesFromSlideToWindow,
 };

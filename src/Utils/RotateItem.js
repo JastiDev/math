@@ -42,6 +42,8 @@ interact('.pointer9').draggable({
     };
 
     if (store.selectedItems.length > 1) {
+      // TODO (Recomendación) El centro de rotación debería siempre 
+      // calcularse usando la información del selector.
       const $fakeDrag = $('#fake-drag');
       centroDeRotacionReal = {
         x: parseFloat($fakeDrag.css('left')) + $fakeDrag.width() / 2,
