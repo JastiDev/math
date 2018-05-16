@@ -13,8 +13,8 @@ import {Point, rotate, translate, scale, scaleDir} from './planeTransforms.js';
 
 var selector;
 var slide;
-var scaleCenter = new Point(0, 0); // Center of the scale transformation
-var scaleFactor = 0; // Scale factor to apply
+var scaleCenter = new Point(0, 0);  // Center of the scale transformation
+var scaleFactor = 1;                // Scale factor to apply
 
 var clickedPoint = ''; // vertex of the selector clicked by the user
 
@@ -26,6 +26,10 @@ var scaleDelta = 0;
 const attachResize = () => {
   interact('.pointers').draggable({
     onstart: event => {
+      // Reset the scaleDelta and scaleFactor after a complete scaling
+      scaleDelta = 0;
+      scaleFactor = 1;
+
       slide = document.getElementById('slide').getBoundingClientRect();
 
       // Coordinates of selector with respect to browser window
@@ -41,85 +45,38 @@ const attachResize = () => {
         selectorFromWindow
       );
 
-      // We add to selector its width, height, angle and diagonal length
+      // We add to selector its width, height and angle 
       // with respect to the slide (store.delta scaled)
       selector.width =
         parseFloat(store.selector.node.style.width) / store.delta;
       selector.height =
         parseFloat(store.selector.node.style.height) / store.delta;
       selector.rotate = getRotationDegrees($(store.selector.node));
-      selector.diagonal = Math.hypot(selector.width, selector.height);
+      selector.center = new Point(
+        selector.x + selector.width/2, selector.y + selector.height/2
+      );
 
-      // Reset the scaleDelta after a complete scaling
-      scaleDelta = 0;
 
-      // id del tirador:
-      // - 'nm', 'wm', 'em', 'sm' Puntos medios
-      // - 'ne', 'nw', 'se', 'sw' Esquinas
+      // Handle id using compass notation N-E-W-S
+      // - 'nm', 'wm', 'em', 'sm' midle points in the sides of selector
+      // - 'ne', 'nw', 'se', 'sw' corners of the selector
       clickedPoint = event.currentTarget.getAttribute('id');
+      let clickedPointObject = document.getElementById(clickedPoint).getBoundingClientRect();
+      // Coordinates of the clicked point with respect to the slide
+      let clickedPointCoordinates = changeCoordinatesFromWindowToSlide(
+        slide, store.delta,
+        new Point(
+          clickedPointObject.left + clickedPointObject.width/2,
+          clickedPointObject.top + clickedPointObject.height/2
+        )
+      );
 
       // Compute the center of the scale. It is the opposite point selected
-      // by the user. Observe that (selector.x, selector.y) is the top left
-      // corner of the selector before selector.rotate (if any)
-      // TODO: If p is the point with coordinates with respect to the slide
-      // of the point clicked by the user the following switch can be sustituted by
-      // const scaleCenter = rotate(180, new Point(selector.x + selector.width/2, selector.y + selector.height/2))(p);
-      // and `scaleDirection` = p - scaleCenter
-      // document.getelementbyId(clickedPoint).getBoundaryClientRect();
-      switch (clickedPoint) {
-        case 'nw':
-          scaleCenter = new Point(
-            selector.x + selector.width,
-            selector.y + selector.height
-          );
-          scaleDirection = new Point(-selector.width, -selector.height);
-          break;
-        case 'nm':
-          scaleCenter = new Point(
-            selector.x + selector.width / 2,
-            selector.y + selector.height
-          );
-          scaleDirection = new Point(0, -selector.height);
-          break;
-        case 'ne':
-          scaleCenter = new Point(selector.x, selector.y + selector.height);
-          scaleDirection = new Point(selector.width, -selector.height);
-          break;
-        case 'em':
-          scaleCenter = new Point(selector.x, selector.y + selector.width / 2);
-          scaleDirection = new Point(selector.width, 0);
-          break;
-        case 'se':
-          scaleCenter = new Point(selector.x, selector.y);
-          scaleDirection = new Point(selector.width, selector.height);
-          break;
-        case 'sm':
-          scaleCenter = new Point(selector.x + selector.width / 2, selector.y);
-          scaleDirection = new Point(0, selector.height);
-          break;
-        case 'sw':
-          scaleCenter = new Point(selector.x + selector.width, selector.y);
-          scaleDirection = new Point(-selector.width, selector.height);
-          break;
-        case 'wm':
-          scaleCenter = new Point(
-            selector.x + selector.width,
-            selector.y + selector.height / 2
-          );
-          scaleDirection = new Point(-selector.width, 0);
-          break;
-      }
-      // scaleCenter and scaleDirection are computed with respect to the
-      // selector before applying an eventual rotation. We have to apply
-      // to them the same rotation as the selector element to correctly
-      // get its coordinates in the slide
-      scaleCenter = rotate(
-        selector.rotate,
-        new Point(
-          selector.x + selector.width / 2,
-          selector.y + selector.height / 2)
-      )(scaleCenter);
-      scaleDirection = rotate(selector.rotate)(scaleDirection);
+      // by the user. 
+      scaleCenter = rotate(180, selector.center)(clickedPointCoordinates);
+      // Compute the `scale direction`. It is the direction (math vector)
+      // that points from the center of the scale to the clicked point.
+      scaleDirection = scaleCenter.direction(clickedPointCoordinates); 
     },
     onmove: event => {
       var userPull = new Point(event.dx, event.dy);
@@ -146,37 +103,40 @@ const attachResize = () => {
         clickedPoint === 'sm'
       ) {
         // Update selector position
-        const selectorCenter = new Point(
-          selector.x + selector.width / 2,
-          selector.y + selector.height / 2
-        );
-        const selectorTopLeft = rotate(selector.rotate, selectorCenter)(
-          selector
-        );
-        const selectorTopRight = rotate(selector.rotate, selectorCenter)(
-          new Point(selector.x + selector.width, selector.y)
-        );
-        const selectorBottomLeft = rotate(selector.rotate, selectorCenter)(
-          new Point(selector.x, selector.y + selector.height)
-        );
-
         // The angle of the selector has not changed since scale preserves angles
         // The new center of selector is the *transformed* center by the scale
         const selectorNewCenter = scaleDir(
           scaleFactor,
           scaleDirection,
           scaleCenter
-        )(selectorCenter);
+        )(selector.center);
+        // The new width and height is computed measuring the distance 
+        // between the transformed corners of the selector instead of 
+        // using and if..else clause to distinguish between 'nm' and 'sm'
+        // (where the height is multiply by `scaleFactor` while the width does
+        // not change), and 'em' and 'wm' (where the width is multiplied 
+        // by `scaleFactor` and the height does not change).
+        const selectorTopLeft = rotate(selector.rotate, selector.center)(
+          selector
+        );
+        const selectorTopRight = rotate(selector.rotate, selector.center)(
+          new Point(selector.x + selector.width, selector.y)
+        );
+        const selectorBottomLeft = rotate(selector.rotate, selector.center)(
+          new Point(selector.x, selector.y + selector.height)
+        );
+
         const newWidth = Point.distance(
           scaleDir(scaleFactor, scaleDirection, scaleCenter)(selectorTopLeft),
           scaleDir(scaleFactor, scaleDirection, scaleCenter)(selectorTopRight)
         );
         const newHeight = Point.distance(
           scaleDir(scaleFactor, scaleDirection, scaleCenter)(selectorTopLeft),
-          scaleDir(scaleFactor, scaleDirection, scaleCenter)(
-            selectorBottomLeft
-          )
+          scaleDir(scaleFactor, scaleDirection, scaleCenter)(selectorBottomLeft)
         );
+
+        // Finally we compute the new top left corner of the selector once
+        // we know the new center and the new width and height.
         let selectorNewTopLeft = translate(
           new Point(-newWidth / 2, -newHeight / 2)
         )(selectorNewCenter);
@@ -187,36 +147,27 @@ const attachResize = () => {
           store.delta,
           selectorNewTopLeft
         );
-        // Position #selector in the window. It is not necessary to `rotate`
-        // again the element since the scale does not affect the rotation of
-        // the element.
-        $('#selector').css({
-          left: selectorNewTopLeft.x,
-          top: selectorNewTopLeft.y,
-        });
-
-        // Finally we *scale* the selector. We have to take into account that
-        // the coordinate system for the selector is outside the slide so
-        // we have to correct the scale factor by `store.delta`
-        $('#selector').css({
-          width: newWidth * store.delta,
-          height: newHeight * store.delta,
-        });
+        // Position #selector in the window. The computed width and height
+        // have to be scaled by store.delta
+        visuallySetItem(
+          {left: selectorNewTopLeft.x,
+            top: selectorNewTopLeft.y,
+            width: newWidth * store.delta,
+            height: newHeight * store.delta,
+            rotate: selector.rotate
+          },
+          store.selector
+        );
 
         // Scale all the selected elements.
         store.selectedItems.map(item => {
           scaleDirItem(scaleFactor, scaleDirection, scaleCenter, item);
         });
-      } else {
+      } else { // Apply a proportional scale
         // Update selector position
         // We move the top-left vertex of the selector according with the
         // applied transformation
-        const selectorNewCenter = scale(scaleFactor, scaleCenter)(
-          new Point(
-            selector.x + selector.width / 2,
-            selector.y + selector.height / 2
-          )
-        );
+        const selectorNewCenter = scale(scaleFactor, scaleCenter)(selector.center);
         let selectorNewTopLeft = translate(
           new Point(
             -selector.width * scaleFactor / 2,
@@ -232,28 +183,27 @@ const attachResize = () => {
         );
         // Position #selector in the window. It is not necessary to `rotate`
         // again the element since the scale does not affect the rotation of
-        // the element.
-        $('#selector').css({
-          left: selectorNewTopLeftinWindowCoord.x,
-          top: selectorNewTopLeftinWindowCoord.y,
-        });
-
-        // Finally we *scale* the selector. We have to take into account that
-        // the coordinate system for the selector is outside the slide so
-        // we have to correct the scale factor by `store.delta`
-        $('#selector').css({
-          width: selector.width * scaleFactor * store.delta,
-          height: selector.height * scaleFactor * store.delta,
-        });
+        // the element. In this case (proportional scale), both the width and
+        // height of the selector are multiplied by `scaleFactor` (as well
+        // as `store.delta`)
+        visuallySetItem(
+          {left: selectorNewTopLeftinWindowCoord.x,
+            top: selectorNewTopLeftinWindowCoord.y,
+            width: selector.width * scaleFactor * store.delta,
+            height: selector.height * scaleFactor * store.delta,
+            rotate: selector.rotate
+          },
+          store.selector
+        );
 
         // Scale all the selected elements.
         store.selectedItems.map(item => {
           if (item.type === 'group'){
-            let newTopLeftGroupContainer = scaleItem(scaleFactor, scaleCenter, item);
-            visuallySetItem(newTopLeftGroupContainer, item);
-            console.log('scaleCenter', scaleCenter);
-            console.log('newTLGC',newTopLeftGroupContainer);
-            item.scale(scaleFactor, scaleCenter, new Point(newTopLeftGroupContainer.left, newTopLeftGroupContainer.top) );
+            // Update group container position
+            let newGroupContainer = scaleItem(scaleFactor, scaleCenter, item);
+            visuallySetItem(newGroupContainer, item);
+            // Update children position
+            item.scale(scaleFactor, scaleCenter, new Point(newGroupContainer.left, newGroupContainer.top) );
           } else {
             visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
           }
@@ -273,20 +223,18 @@ const attachResize = () => {
       }
     },
     onend: event => {
-      // TODO Actualizar la información del selector. Si se componen dos
-      // tipos de movimientos (p.e. un escalado y una rotación) no se realiza
-      // correctamente puesto que en el segundo movimiento se aplica la
-      // información del selector inicial.
-
       // AQUÍ SE GUARDAN LOS DATOS DE ESTA FORMA NORMALMENTE:
       store.selectedItems.map(item => {
         if (item.type === 'group'){
-          // visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
-          // console.log(item);
           // Update the position of each item in the group
-          let groupContainer = item;
           item.groupedItems.map(item => {
+            // const newItemData = item.node.getBoundingClientRect();
+            // item.setPosition(newItemData.x, newItemData.y);
+            // item.setSize(newItemData.width, newItemData.height);
+
             const $item = $(item.node);
+            // console.log($item);
+            // console.log(item.node.getBoundingClientRect());
             // Como el objeto se mueve a través del DOM y no del store
             // La obtención final de los datos la obtenemos siempre de lo
             // que tenemos en pantalla y nos dice el CSS
@@ -300,7 +248,6 @@ const attachResize = () => {
             item.setSize(anchoFinal, altoFinal);
           });
         }
-        // Check if `item` is a group
         // Convertimos el item a un node de jQuery para mayor comodidad
         const $item = $(item.node);
         // Como el objeto se mueve a través del DOM y no del store
@@ -316,13 +263,7 @@ const attachResize = () => {
 
         const rotaciónFinal = getRotationDegrees($item);
         item.setRotation(rotaciónFinal);
-
-        if(item.type === 'group'){
-          // visuallySetItem(scaleItem(scaleFactor, scaleCenter, item), item);
-        }
-
       });
-      scaleFactor = 0;
     },
   });
 };
@@ -331,101 +272,3 @@ const destroyResize = () => {
 };
 
 export {attachResize, destroyResize};
-
-// console.group('Valores del selector con respecto a la ventana:');
-// console.log('x: ' + store.selector.node.style.left);
-// console.log('y: ' + store.selector.node.style.top);
-// console.log('w: ' + store.selector.node.style.width);
-// console.log('h: ' + store.selector.node.style.height);
-// console.groupEnd();
-
-// console.group('Valores del selector con respecto al slide:');
-// const newTopLeft = changeCoordinatesFromWindowToSlide(
-//   new Point(slide.x, slide.y),
-//   store.delta,
-//   new Point(
-//     parseFloat(store.selector.node.style.left), parseFloat(store.selector.node.style.top))
-// );
-// console.log('x: ' + newTopLeft.x);
-// console.log('y: ' + newTopLeft.y);
-// console.log('w: ' + store.selector.node.style.width/store.delta);
-// console.log('h: ' + store.selector.node.style.height/store.delta);
-// console.groupEnd();
-
-// // items seleccionados
-// store.selectedItems.map(item => {
-//   console.group('Valores del item con color:' + item.background);
-
-//   console.log('Valores del item en el store: ');
-//   console.log('x: ' + item.left);
-//   console.log('y: ' + item.top);
-//   console.log('w: ' + item.width);
-//   console.log('h: ' + item.height);
-//   console.log('r: ' + item.rotate);
-
-//   console.groupEnd();
-// });
-
-// Datos importantes del event
-
-// Tirador (bolita desde donde se tira)
-// console.group('Datos del evento: ');
-// console.log('Evento currentTarget: ');
-// console.log(event.currentTarget);
-// console.log('Id para saber el tirador currentTarget: ');
-// // id del tirador:
-// // - 'nm', 'wm', 'em', 'sm' Puntos medios
-// // - 'ne', 'nw', 'se', 'sw' Esquinas
-// console.log(event.currentTarget.getAttribute('id')); // id del tirador, para saber cual es
-// console.groupEnd();
-
-// console.group('Datos del Selector: ');
-// // Obtener posiciones del selector con respecto a la ventana
-// console.log('Datos con respecto a la ventana del selector: ');
-// console.log(store.selector.node.getBoundingClientRect); // posiciones
-// console.log(store.selector.node); // posiciones
-// console.log(store.selector.node.style.left); // posiciones
-// // Convertimos a jQuery para obtener la rotación, esto se puede hacer de varias formas:
-// const $selectorConJquery = $(store.selector.node);
-// console.log(
-//   'Rotación del selector: ' + getRotationDegrees($selectorConJquery)
-// ); // el valor es cero cuando está el tirador del rotador abajo
-// console.groupEnd();
-
-// console.group('Valores de los items seleccionados: ');
-// // Obtener datos de los elementos seleccionados
-// store.selectedItems.map(item => {
-//   console.group('Valores del item con color:' + item.background);
-//   console.log('Nodo HTML: ');
-//   console.log(item.node); // Objeto nativo de javascript, equivale a document.getElementById
-//   console.log('Valores con respecto a la ventana:');
-//   console.log(item.node.getBoundingClientRect()); // Valores con respecto a la ventana
-//   console.log('Valores con respecto al slide:');
-//   const $item = $(item.node);
-//   console.log('x: ' + parseFloat($item.css('left')));
-//   console.log('y: ' + parseFloat($item.css('top')));
-//   console.log('w: ' + $item.width());
-//   console.log('h: ' + $item.height());
-//   console.log('Rotación del item: ' + getRotationDegrees($item));
-
-//   console.log('Valores del item en el store: ');
-//   console.log('x: ' + item.left);
-//   console.log('y: ' + item.top);
-//   console.log('w: ' + item.width);
-//   console.log('h: ' + item.height);
-//   console.log('r: ' + item.rotate);
-
-//   console.groupEnd();
-// });
-// console.groupEnd();
-
-// console.group('Datos de la slide: ');
-// console.log('Datos con respecto a la ventana: ');
-// console.log(document.getElementById('slide').getBoundingClientRect());
-// console.log('Datos de ancho y alto: ');
-// const $slide = $(document.getElementById('slide'));
-// console.log('w: ' + $slide.width());
-// console.log('h: ' + $slide.height());
-// // console.log('slide: ' + $slide);
-// console.log('delta' + store.delta);
-// console.groupEnd();
